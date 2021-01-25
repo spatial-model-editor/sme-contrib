@@ -1,0 +1,5 @@
+sme
+numpy
+numdifftools
+pytest
+scipy
