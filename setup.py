@@ -33,6 +33,5 @@ setup(
     install_requires=[
         "numpy",
     ],
-    test_suite="tests",
     zip_safe=False,
 )
