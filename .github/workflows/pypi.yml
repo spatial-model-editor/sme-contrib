@@ -1,0 +1,23 @@
+name: PyPI
+
+on: push
+
+jobs:
+  pypi:
+    name: Upload to PyPI
+    runs-on: ubuntu-18.04
+    # upload pypi wheels if commit is tagged with "0.*"
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/0.')
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - run: pip install -r dev-requirements.txt
+      - run: pip install --upgrade setuptools wheel
+      - run: pytest
+      - run: python setup.py sdist bdist_wheel
+      - uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.pypi_password }}
