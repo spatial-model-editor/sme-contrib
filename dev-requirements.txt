@@ -3,3 +3,4 @@ numpy
 numdifftools
 pytest
 scipy
+pyswarms

@@ -2,6 +2,10 @@ import sme_contrib.optimize as opt
 import numdifftools
 import numpy as np
 
+# function with minimum at x = [0.375, -0.1]
+def objective_function(x):
+    return 1.23 + (x[0] - 0.375) ** 2 + (x[1] + 0.1) ** 4
+
 
 def r(x):
     return (
@@ -39,3 +43,10 @@ def test_abs_diff() -> None:
     a = np.array([1.0, 3.0, 5.0])
     b = np.array([2.0, 3.1, 5.0])
     assert np.abs(opt.abs_diff(a, b) - 0.505) < 1e-13
+
+
+def test_minimize() -> None:
+    opt.objective_function = objective_function
+    cost, res = opt.minimize([-5.0, -5.0], [5.0, 5.0], particles=10, iterations=80)
+    assert np.abs(res[0] - 0.375) < 0.050
+    assert np.abs(res[1] + 0.100) < 0.050

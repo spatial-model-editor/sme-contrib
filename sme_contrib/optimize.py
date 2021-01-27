@@ -1,5 +1,6 @@
 import numpy as np
 import multiprocessing
+import pyswarms as ps
 
 
 def _hessian_f(dat):
@@ -78,3 +79,25 @@ def rescale(x, new_max_element):
 # sum of squares difference between every element of x and y
 def abs_diff(x, y):
     return 0.5 * np.sum(np.power(x - y, 2))
+
+
+# calculate objective function for each x in xs
+def _ps_iter(xs):
+    pool = multiprocessing.Pool()
+    norms = pool.map(objective_function, xs)
+    pool.close()
+    pool.join()
+    return np.array(norms)
+
+
+# minimize objective function using particle swarm
+def minimize(lowerbounds, upperbounds, particles=20, iterations=20):
+    options = {"c1": 0.5, "c2": 0.3, "w": 0.9}
+    optimizer = ps.single.GlobalBestPSO(
+        particles,
+        dimensions=len(lowerbounds),
+        options=options,
+        bounds=(np.array(lowerbounds), np.array(upperbounds)),
+    )
+    ps_cost, ps_res = optimizer.optimize(_ps_iter, iters=iterations)
+    return ps_cost, ps_res

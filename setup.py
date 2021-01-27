@@ -32,6 +32,7 @@ setup(
     packages=["sme_contrib"],
     install_requires=[
         "numpy",
+        "pyswarms",
     ],
     zip_safe=False,
 )
