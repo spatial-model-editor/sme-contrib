@@ -1,22 +1,20 @@
 import numpy as np
 import multiprocessing
 import pyswarms as ps
+from itertools import repeat
 
 
 def _hessian_f(f, x0, i, j, rel_eps):
-    if i == None:
+    if i is None:
         x = np.array(x0, dtype=np.float64)
         return f(x)
-    if j == None:
+    if j is None:
         x = np.array(x0, dtype=np.float64)
-        dx_i = rel_eps * x[i]
-        x[i] = x[i] + dx_i
+        x[i] = (1.0 + rel_eps) * x[i]
         return f(x)
     x = np.array(x0, dtype=np.float64)
-    dx_i = rel_eps * x[i]
-    dx_j = rel_eps * x[j]
-    x[i] = x[i] + dx_i
-    x[j] = x[j] + dx_j
+    x[i] = (1.0 + rel_eps) * x[i]
+    x[j] = (1.0 + rel_eps) * x[j]
     return f(x)
 
 
@@ -24,48 +22,55 @@ def _hessian_f(f, x0, i, j, rel_eps):
 # requires N^2 + N + 1 evaluations of f
 # https://en.wikipedia.org/wiki/Finite_difference#Multivariate_finite_differences
 def hessian(f, x0, rel_eps=1e-2):
-    pool = multiprocessing.Pool()
     n = len(x0)
-    idxs = np.zeros((n, n), dtype=np.int)
+    # make list of arguments for each f call required
     args = []
-    args.append((f, x0, None, None, rel_eps))  # f_(0,0)
+    # f([.., x_i, .., x_j, ..])
+    args.append((f, x0, None, None, rel_eps))
+    # f([.., x_i+dx_i, .., x_j, ..])
     for i in range(n):
-        args.append((f, x0, i, None, +rel_eps))  # f_(i+,0)
+        args.append((f, x0, i, None, +rel_eps))
+    # f([.., x_i-dx_i, .., x_j, ..])
     for i in range(n):
-        args.append((f, x0, i, None, -rel_eps))  # f_(i-,0)
+        args.append((f, x0, i, None, -rel_eps))
+    # f([.., x_i+dx_i, .., x_j+dx_j, ..])
     for i in range(n):
         for j in range(0, i):
-            args.append((f, x0, i, j, +rel_eps))  # f_(i+,j+)
-    k = 0
+            args.append((f, x0, i, j, +rel_eps))
+    # f([.., x_i-dx_i, .., x_j-dx_j, ..])
     for i in range(n):
         for j in range(0, i):
-            args.append((f, x0, i, j, -rel_eps))  # f_(i-,j-)
-            idxs[(i, j)] = k
-            k = k + 1
+            args.append((f, x0, i, j, -rel_eps))
+    # call f with each set of args
+    pool = multiprocessing.Pool()
     ff = pool.starmap(_hessian_f, args)
     pool.close()
     pool.join()
+    # construct hessian elements from these values
     h = np.zeros((n, n))
     # diagonal elements
     for i in range(n):
-        h[(i, i)] = ff[i + 1] - 2 * ff[0] + ff[n + i + 1]
+        h[(i, i)] = ff[i + 1] - ff[0] + ff[n + i + 1] - ff[0]
         h[(i, i)] /= rel_eps * rel_eps * x0[i] * x0[i]
     # off-diagonal elements
+    offset_ij = 2 * n + 1
+    n_ij = (n * (n - 1)) // 2
+    index_ij = 0
     for i in range(n):
         for j in range(0, i):
-            idx = idxs[(i, j)]
             h[(i, j)] = (
-                ff[idx + 2 * n + 1]
-                - ff[i + 1]
+                ff[0]
+                - ff[1 + i]
                 + ff[0]
-                - ff[j + 1]
-                + ff[0]
-                - ff[n + i + 1]
-                + ff[idx + 2 * n + 1 + (n * (n - 1) // 2)]
-                - ff[n + j + 1]
+                - ff[1 + j]
+                + ff[offset_ij + index_ij]
+                - ff[1 + n + i]
+                + ff[offset_ij + n_ij + index_ij]
+                - ff[1 + n + j]
             )
             h[(i, j)] /= 2.0 * rel_eps * rel_eps * x0[i] * x0[j]
             h[(j, i)] = h[(i, j)]
+            index_ij += 1
     return h
 
 
