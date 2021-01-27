@@ -5,7 +5,7 @@ with open("README.md") as f:
 
 setup(
     name="sme_contrib",
-    version="0.0.1",
+    version="0.0.2",
     author="Liam Keegan",
     author_email="liam@keegan.ch",
     description="Useful modules for use with sme (Spatial Model Editor)",
