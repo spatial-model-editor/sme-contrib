@@ -3,12 +3,11 @@ import multiprocessing
 import pyswarms as ps
 
 
-def _hessian_f(dat):
-    (typ, i, j, f, x0, rel_eps) = dat
-    if typ == 0:
+def _hessian_f(f, x0, i, j, rel_eps):
+    if i == None:
         x = np.array(x0, dtype=np.float64)
         return f(x)
-    if typ == 1:
+    if j == None:
         x = np.array(x0, dtype=np.float64)
         dx_i = rel_eps * x[i]
         x[i] = x[i] + dx_i
@@ -28,22 +27,22 @@ def hessian(f, x0, rel_eps=1e-2):
     pool = multiprocessing.Pool()
     n = len(x0)
     idxs = np.zeros((n, n), dtype=np.int)
-    dat = []
-    dat.append((0, 0, 0, f, x0, rel_eps))  # f_(0,0)
+    args = []
+    args.append((f, x0, None, None, rel_eps))  # f_(0,0)
     for i in range(n):
-        dat.append((1, i, 0, f, x0, +rel_eps))  # f_(i+,0)
+        args.append((f, x0, i, None, +rel_eps))  # f_(i+,0)
     for i in range(n):
-        dat.append((1, i, 0, f, x0, -rel_eps))  # f_(i-,0)
+        args.append((f, x0, i, None, -rel_eps))  # f_(i-,0)
     for i in range(n):
         for j in range(0, i):
-            dat.append((2, i, j, f, x0, +rel_eps))  # f_(i+,j+)
+            args.append((f, x0, i, j, +rel_eps))  # f_(i+,j+)
     k = 0
     for i in range(n):
         for j in range(0, i):
-            dat.append((2, i, j, f, x0, -rel_eps))  # f_(i-,j-)
+            args.append((f, x0, i, j, -rel_eps))  # f_(i-,j-)
             idxs[(i, j)] = k
             k = k + 1
-    ff = pool.map(_hessian_f, dat)
+    ff = pool.starmap(_hessian_f, args)
     pool.close()
     pool.join()
     h = np.zeros((n, n))
@@ -79,6 +78,12 @@ def rescale(x, new_max_element):
 # sum of squares difference between every element of x and y
 def abs_diff(x, y):
     return 0.5 * np.sum(np.power(x - y, 2))
+
+
+def objective_function(x):
+    raise RuntimeError(
+        "To use sme_contrib.optimize.minimize, please define sme_contrib.optimize.objective_function before calling minimize"
+    )
 
 
 # calculate objective function for each x in xs
