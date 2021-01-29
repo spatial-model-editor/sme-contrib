@@ -1,7 +1,7 @@
 import numpy as np
 import multiprocessing
 import pyswarms as ps
-from itertools import repeat
+from functools import partial
 
 
 def _hessian_f(f, x0, i, j, rel_eps):
@@ -85,23 +85,17 @@ def abs_diff(x, y):
     return 0.5 * np.sum(np.power(x - y, 2))
 
 
-def objective_function(x):
-    raise RuntimeError(
-        "To use sme_contrib.optimize.minimize, please define sme_contrib.optimize.objective_function before calling minimize"
-    )
-
-
-# calculate objective function for each x in xs
-def _ps_iter(xs):
-    pool = multiprocessing.Pool()
-    norms = pool.map(objective_function, xs)
+# calculate function f for each x in xs
+def _f_eval(xs, f):
+    pool = multiprocessing.Pool(processes=12)
+    norms = pool.map(f, xs)
     pool.close()
     pool.join()
     return np.array(norms)
 
 
 # minimize objective function using particle swarm
-def minimize(lowerbounds, upperbounds, particles=20, iterations=20):
+def minimize(f, lowerbounds, upperbounds, particles=20, iterations=20):
     options = {"c1": 0.5, "c2": 0.3, "w": 0.9}
     optimizer = ps.single.GlobalBestPSO(
         particles,
@@ -109,5 +103,5 @@ def minimize(lowerbounds, upperbounds, particles=20, iterations=20):
         options=options,
         bounds=(np.array(lowerbounds), np.array(upperbounds)),
     )
-    ps_cost, ps_res = optimizer.optimize(_ps_iter, iters=iterations)
+    ps_cost, ps_res = optimizer.optimize(_f_eval, iters=iterations, f=f)
     return ps_cost, ps_res

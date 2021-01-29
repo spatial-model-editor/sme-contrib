@@ -15,4 +15,4 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install -r dev-requirements.txt
-      - run: pytest
+      - run: pytest -v

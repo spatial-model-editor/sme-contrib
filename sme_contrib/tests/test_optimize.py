@@ -2,11 +2,7 @@ import sme_contrib.optimize as opt
 import numdifftools
 import numpy as np
 
-# function with minimum at x = [0.375, -0.9]
-def objective_function(x):
-    return 1.23 + (x[0] - 0.375) ** 2 + (x[1] + 0.9) ** 4
-
-
+# analytic test function for hessian
 def r(x):
     return (
         (1.123 - x[0]) ** 2
@@ -45,8 +41,14 @@ def test_abs_diff() -> None:
     assert np.abs(opt.abs_diff(a, b) - 0.505) < 1e-13
 
 
+# analytic test function for minimize with minimum at x = [0.375, -0.9]
+def objective_function(x):
+    return 1.23 + (x[0] - 0.375) ** 2 + (x[1] + 0.9) ** 4
+
+
 def test_minimize() -> None:
-    opt.objective_function = objective_function
-    cost, res = opt.minimize([-5.0, -5.0], [5.0, 5.0], particles=24, iterations=100)
+    cost, res = opt.minimize(
+        objective_function, [-5.0, -5.0], [5.0, 5.0], particles=24, iterations=100
+    )
     assert np.abs(res[0] - 0.375) < 0.100
     assert np.abs(res[1] + 0.900) < 0.100
