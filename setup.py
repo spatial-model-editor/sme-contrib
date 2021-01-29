@@ -1,7 +1,10 @@
-from setuptools import setup
+from setuptools import find_packages, setup
 
-with open("README.md") as f:
+with open("README.md", encoding="utf8") as f:
     long_description = f.read()
+
+with open("requirements.txt") as f:
+    requirements = f.read().splitlines()
 
 setup(
     name="sme_contrib",
@@ -29,10 +32,7 @@ setup(
         "Programming Language :: Python :: 3.9",
     ],
     license="MIT",
-    packages=["sme_contrib"],
-    install_requires=[
-        "numpy",
-        "pyswarms",
-    ],
+    packages=find_packages(exclude=["docs", "tests"]),
+    install_requires=requirements,
     zip_safe=False,
 )

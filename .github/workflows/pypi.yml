@@ -15,7 +15,7 @@ jobs:
           python-version: 3.8
       - run: pip install -r dev-requirements.txt
       - run: pip install --upgrade pip setuptools wheel
-      - run: pytest
+      - run: python -m pytest -v
       - run: python setup.py sdist bdist_wheel
       - uses: pypa/gh-action-pypi-publish@master
         with:
