@@ -5,7 +5,7 @@ A collection of useful modules for use with `sme <https://pypi.org/project/sme/>
 the python interface to `Spatial Model Editor <https://spatial-model-editor.readthedocs.io/>`_.
 
 .. toctree::
-    :maxdepth: 3
+    :maxdepth: 4
     :caption: Documentation
 
     documentation

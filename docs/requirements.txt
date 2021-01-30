@@ -3,6 +3,6 @@ matplotlib
 nbsphinx
 numpy
 pandoc
-#sme
+sme
 sphinx>3
 sphinx_rtd_theme

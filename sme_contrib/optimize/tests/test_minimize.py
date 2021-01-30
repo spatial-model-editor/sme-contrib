@@ -1,4 +1,4 @@
-from sme_contrib.optimize.minimize import minimize
+import sme_contrib.optimize as opt
 import numdifftools
 import numpy as np
 
@@ -8,6 +8,6 @@ def f(x):
 
 
 def test_minimize() -> None:
-    cost, res = minimize(f, [-5.0, -5.0], [5.0, 5.0], particles=24, iterations=100)
+    cost, res = opt.minimize(f, [-5.0, -5.0], [5.0, 5.0], particles=24, iterations=100)
     assert np.abs(res[0] - 0.375) < 0.100
     assert np.abs(res[1] + 0.900) < 0.100

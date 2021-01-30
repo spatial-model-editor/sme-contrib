@@ -1,5 +1,6 @@
 import numpy as np
 import multiprocessing
+from os import cpu_count
 
 
 def _hessian_f(f, x0, i, j, rel_eps):
@@ -14,7 +15,7 @@ def _hessian_f(f, x0, i, j, rel_eps):
     return f(x)
 
 
-def hessian(f, x0, rel_eps=1e-2):
+def hessian(f, x0, rel_eps=1e-2, processes=cpu_count()):
     """Approximate Hessian of function ``f`` at point ``x0``
 
     Uses a `finite difference`_ approximation where the step size used
@@ -22,6 +23,10 @@ def hessian(f, x0, rel_eps=1e-2):
 
     Requires :math:`N^2 + N + 1` evalulations of ``f``, where :math:`N`
     is the number of elements of ``x0``
+
+    The evaluations of ``f`` are done in parallel, so ``f`` must be a
+    thread-safe function that can safely be called from multiple threads
+    at the same time.
 
     Note:
         This choice of step size allows the different elements of x0 to have
@@ -32,6 +37,7 @@ def hessian(f, x0, rel_eps=1e-2):
         f: The function to evaluate, it should be callable as f(x0) and return a scalar
         x0: The point at which to evaluate the function, a flot or list of floats.
         rel_eps: The relative step size to use
+        processes: The number of processes to use (uses number of cpu cores as default)
 
     Returns:
         np.array: The Hessian as a 2d numpy array of floats
@@ -60,7 +66,7 @@ def hessian(f, x0, rel_eps=1e-2):
         for j in range(0, i):
             args.append((f, x0, i, j, -rel_eps))
     # call f with each set of args
-    pool = multiprocessing.Pool()
+    pool = multiprocessing.Pool(processes)
     ff = pool.starmap(_hessian_f, args)
     pool.close()
     pool.join()

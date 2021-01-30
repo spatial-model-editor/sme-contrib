@@ -5,4 +5,4 @@ Modules
    :toctree: _autosummary
    :recursive:
 
-   sme_contrib.optimize
+   sme_contrib
