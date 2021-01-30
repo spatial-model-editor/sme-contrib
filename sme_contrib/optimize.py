@@ -1,11 +1,13 @@
 """Optimization, fitting and analysis"""
 
-
 import numpy as np
 import multiprocessing
 import pyswarms as ps
 from functools import partial
 from os import cpu_count
+from PIL import Image
+from matplotlib import pyplot as plt
+import sme
 
 
 def _hessian_f(f, x0, i, j, rel_eps):
@@ -42,7 +44,7 @@ def hessian(f, x0, rel_eps=1e-2, processes=None):
         f: The function to evaluate, it should be callable as f(x0) and return a scalar
         x0: The point at which to evaluate the function, a flot or list of floats.
         rel_eps: The relative step size to use
-        processes: The number of processes to use (uses number of cpu cores as default)
+        processes: The number of processes to use (the default ``None`` means use all available cpu cores)
 
     Returns:
         np.array: The Hessian as a 2d numpy array of floats
@@ -135,7 +137,7 @@ def minimize(f, lowerbounds, upperbounds, particles=20, iterations=20, processes
         upperbounds: The upper bound for each element of x.
         particles: The number of particles to use in the swarm
         iterations: The number of iterations to do
-        processes: The number of processes to use (if not set uses all available cpu cores)
+        processes: The number of processes to use (the default ``None`` means use all available cpu cores)
 
     Returns:
         ps_cost: The lowest cost
@@ -189,3 +191,248 @@ def abs_diff(x, y):
         float: absolute difference between the two arrays
     """
     return 0.5 * np.sum(np.power(x - y, 2))
+
+
+# plot 2d array as heat-map image
+def _ss_plot_image(conc, title, ax=None):
+    if ax is None:
+        ax = plt.gca()
+    ax.imshow(conc)
+    # ax.colorbar()
+    # plt.axis("off")
+    ax.set_title(title)
+    return ax
+
+
+# plot 1d array as line
+def _ss_plot_line(x, y, title, ax=None):
+    if ax is None:
+        ax = plt.gca()
+    ax.set_title(title)
+    ax.plot(x, y)
+    return ax
+
+
+class SteadyState:
+    """Steady state parameter fitting
+
+    Given a model and an image of the target steady state distribution of
+    a species (or the sum of multiple species), this class tries to find
+    a set of parameters where the simulated model has a steady state solution
+    that is as close as possible to the target image.
+
+    Args:
+        modelfile(str): The sbml file containing the model
+        imagefile(str): The image file containing the target concentration
+        species(List of str): The species to compare to the target concentration
+        function_to_apply_params: A function that sets the parameters in the model.
+            This should be a function with signature ``f(model, params)``, and
+            which sets the value of the parameters to be fitted in ``model``
+            according to the values in ``params``, which will be a list of floats.
+        lower_bounds(List of float): The lower bound for each parameter to be fitted
+        upper_bounds(List of float): The upper bound for each parameter to be fitted
+        simulation_time(float): The length of time to simulate the model
+        steady_state_time(float): The length of time to multiply the final rate of change of concentration.
+            The cost function that is minimized is the sum of squares over all pixels
+            of the difference between the final concentration and the target concentration, plus the
+            sum of squares over all pixels of the difference between ``steady_state_time`` * dc/dt and
+            zero. Multiplying the rate of change by a time makes the second term have the same units as
+            the first term, and the relative importance of being close to steady state versus close
+            to the desired concentration in the fit can be adjusted by altering ``steady_state_time``.
+            The larger it is, the closer the results will be to a steady state.
+
+    """
+
+    def __init__(
+        self,
+        modelfile,
+        imagefile,
+        species,
+        function_to_apply_params,
+        lower_bounds,
+        upper_bounds,
+        simulation_time=1000,
+        steady_state_time=200,
+    ):
+        self.filename = modelfile
+        self.species = species
+        self.set_target_image(imagefile)
+        self.simulation_time = simulation_time
+        self.steady_state_time = steady_state_time
+        self.apply_params = function_to_apply_params
+        self.lower_bounds = lower_bounds
+        self.upper_bounds = upper_bounds
+
+    def set_target_image(self, imagefile):
+        """Set a new target concentration image
+
+        Most image formats are supported. If the image has multiple
+        channels, e.g. RGB or RGBA, it is first converted to grayscale.
+
+        Note:
+            This doesn't (yet) check that the image has the same dimensions
+            as the model geometry, nor does it mask the pixels that lie
+            outside of the model compartments to zero
+
+        Args:
+            imagefile(str): The image filename
+        """
+        # todo: mask image to only pixels in model
+        # todo: check image dimensions match model geometry image
+        img = Image.open(imagefile)
+        if len(img.getbands()) > 1:
+            # convert RGB or RGBA image to 8-bit grayscale
+            img = img.convert("L")
+        self.target_conc = np.asarray(img, dtype=np.float64)
+        self.target_conc_max = np.amax(self.target_conc)
+
+    def _get_conc(self, result):
+        c = np.array(result.species_concentration[self.species[0]])
+        for i in range(1, len(self.species)):
+            c = np.add(c, np.array(result.species_concentration[self.species[i]]))
+        return c
+
+    def _get_dcdt(self, result):
+        dcdt = np.array(result.species_dcdt[self.species[0]])
+        for i in range(1, len(self.species)):
+            dcdt = np.add(dcdt, np.array(result.species_dcdt[self.species[i]]))
+        return dcdt
+
+    def _rescale(self, result):
+        c = self._get_conc(result)
+        dcdt = self._get_dcdt(result)
+        scale_factor = self.target_conc_max / np.amax(c)
+        return (scale_factor * c, scale_factor * dcdt)
+
+    def _obj_func(self, params, verbose=False):
+        m = sme.open_sbml_file(self.filename)
+        self.apply_params(m, params)
+        results = m.simulate(
+            simulation_time=self.simulation_time,
+            image_interval=self.simulation_time,
+            timeout_seconds=10,
+            throw_on_timeout=False,
+        )
+        if len(results) == 1:
+            # simulation fail or timeout
+            print("simulation timeout")
+            return abs_diff(0, self.target_conc)
+        c, dcdt = self._rescale(results[-1])
+        conc_norm = abs_diff(c, self.target_conc)
+        dcdt_norm = abs_diff(self.steady_state_time * dcdt, 0)
+        if verbose:
+            return (conc_norm, dcdt_norm, c)
+        return conc_norm + dcdt_norm
+
+    def find(self, particles=20, iterations=20, processes=None):
+        """Find parameters that result in a steady state concentration close to the target image
+
+        Uses particle swarm to minimize the difference between the rescaled concentration
+        and the target image, as well as the distance from a steady state solution.
+
+        Args:
+            particles(int): The number of particles in the particle swarm
+            iterations(int): The number of particle swarm iterations
+            processes: The number of processes to use (the default ``None`` means use all available cpu cores)
+
+        Returns:
+            List of float: the best parameters found
+        """
+        cost, params, optimizer = minimize(
+            self._obj_func,
+            self.lower_bounds,
+            self.upper_bounds,
+            particles=particles,
+            iterations=iterations,
+            processes=processes,
+        )
+        self.cost_history = optimizer.cost_history
+        self.mean_pbest_history = optimizer.mean_pbest_history
+        self.conc_norm, self.dcdt_norm, self.model_conc = self._obj_func(
+            params, verbose=True
+        )
+        self.params = params
+        return params
+
+    def plot_target_concentration(self, ax=None):
+        """Plot the target concentration as a 2d heat map
+
+        Args:
+            ax(matplotlib.axes._subplots.AxesSubplot): Optionally specify the axes to draw the plot on
+
+        Returns:
+            matplotlib.axes._subplots.AxesSubplot: The axes the plot was drawn on
+        """
+        return _ss_plot_image(self.target_conc, "Target Concentration", ax)
+
+    def plot_model_concentration(self, ax=None):
+        """Plot the model concentration as a 2d heat map
+
+        The model concentration is normalized such that the maximum pixel intensity
+        matches the maximum pixel intensity of the target concentration image
+
+        Args:
+            ax(matplotlib.axes._subplots.AxesSubplot): Optionally specify the axes to draw the plot on
+
+        Returns:
+            matplotlib.axes._subplots.AxesSubplot: The axes the plot was drawn on
+        """
+        return _ss_plot_image(self.model_conc, "Model Concentration", ax)
+
+    def plot_cost_history(self, ax=None):
+        """Plot the cost history
+
+        The cost of the best set of parameters at each iteration of particle swarm.
+
+        Args:
+            ax(matplotlib.axes._subplots.AxesSubplot): Optionally specify the axes to draw the plot on
+
+        Returns:
+            matplotlib.axes._subplots.AxesSubplot: The axes the plot was drawn on
+        """
+        return _ss_plot_line(
+            [*range(len(self.cost_history))], self.cost_history, "Best cost history", ax
+        )
+
+    def plot_cost_history_pbest(self, ax=None):
+        """Plot the mean particle best cost history
+
+        The mean of the best cost for each particle in the swarm, at each iteration of particle swarm.
+
+        Args:
+            ax(matplotlib.axes._subplots.AxesSubplot): Optionally specify the axes to draw the plot on
+
+        Returns:
+            matplotlib.axes._subplots.AxesSubplot: The axes the plot was drawn on
+        """
+        return _ss_plot_line(
+            [*range(len(self.mean_pbest_history))],
+            self.mean_pbest_history,
+            "Mean particle best cost history",
+            ax,
+        )
+
+    def plot_timeseries(self, simulation_time, image_interval_time, ax=None):
+        """Plot a timeseries of the sum of concentrations
+
+        The sum of all species concentrations summed over all pixels,
+        as a function of the simulation time. This is a convenience plot
+        just to see by eye how close the simulation is to a steady state.
+
+        Args:
+            ax(matplotlib.axes._subplots.AxesSubplot): Optionally specify the axes to draw the plot on
+
+        Returns:
+            matplotlib.axes._subplots.AxesSubplot: The axes the plot was drawn on
+        """
+        m = sme.open_sbml_file(self.filename)
+        self.apply_params(m, self.params)
+        results = m.simulate(
+            simulation_time=simulation_time, image_interval=image_interval_time
+        )
+        concs = []
+        times = []
+        for result in results:
+            concs.append(np.sum(self._get_conc(result)))
+            times.append(result.time_point)
+        return _ss_plot_line(times, concs, "Concentration time series", ax)

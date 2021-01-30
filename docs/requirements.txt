@@ -2,5 +2,4 @@ ipykernel
 matplotlib
 nbsphinx
 pandoc
-sphinx>3
-sphinx_rtd_theme
+sme
