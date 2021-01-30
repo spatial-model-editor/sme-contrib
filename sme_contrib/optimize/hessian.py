@@ -3,39 +3,59 @@ import multiprocessing
 
 
 def _hessian_f(f, x0, i, j, rel_eps):
+    x = np.array(x0, dtype=np.float64)
     if i is None:
-        x = np.array(x0, dtype=np.float64)
         return f(x)
     if j is None:
-        x = np.array(x0, dtype=np.float64)
         x[i] = (1.0 + rel_eps) * x[i]
         return f(x)
-    x = np.array(x0, dtype=np.float64)
     x[i] = (1.0 + rel_eps) * x[i]
     x[j] = (1.0 + rel_eps) * x[j]
     return f(x)
 
 
-# Numerical approx to hessian of f at x0
-# requires N^2 + N + 1 evaluations of f
-# https://en.wikipedia.org/wiki/Finite_difference#Multivariate_finite_differences
 def hessian(f, x0, rel_eps=1e-2):
+    """Approximate Hessian of function ``f`` at point ``x0``
+
+    Uses a `finite difference`_ approximation where the step size used
+    for each element ``i`` of ``x0`` is ``rel_eps * x[i]``.
+
+    Requires :math:`N^2 + N + 1` evalulations of ``f``, where :math:`N`
+    is the number of elements of ``x0``
+
+    Note:
+        This choice of step size allows the different elements of x0 to have
+        vastly different scales without causing numerical instabilities,
+        but it will fail if an element of ``x0`` is equal to 0.
+
+    Args:
+        f: The function to evaluate, it should be callable as f(x0) and return a scalar
+        x0: The point at which to evaluate the function, a flot or list of floats.
+        rel_eps: The relative step size to use
+
+    Returns:
+        np.array: The Hessian as a 2d numpy array of floats
+
+    .. _finite difference:
+        https://en.wikipedia.org/wiki/Finite_difference#Multivariate_finite_differences
+
+    """
     n = len(x0)
     # make list of arguments for each f call required
     args = []
-    # f([.., x_i, .., x_j, ..])
+    # f(x)
     args.append((f, x0, None, None, rel_eps))
-    # f([.., x_i+dx_i, .., x_j, ..])
+    # f([.., x_i+dx_i, ..])
     for i in range(n):
         args.append((f, x0, i, None, +rel_eps))
-    # f([.., x_i-dx_i, .., x_j, ..])
+    # f([.., x_i-dx_i, ..])
     for i in range(n):
         args.append((f, x0, i, None, -rel_eps))
-    # f([.., x_i+dx_i, .., x_j+dx_j, ..])
+    # f([.., x_j+dx_j, .., x_i+dx_i, ..])
     for i in range(n):
         for j in range(0, i):
             args.append((f, x0, i, j, +rel_eps))
-    # f([.., x_i-dx_i, .., x_j-dx_j, ..])
+    # f([.., x_j-dx_j, .., x_i-dx_i, ..])
     for i in range(n):
         for j in range(0, i):
             args.append((f, x0, i, j, -rel_eps))
