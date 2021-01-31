@@ -1,8 +1,6 @@
 ipykernel
 matplotlib
 nbsphinx
-numpy
 pandoc
-sme
 sphinx>3
 sphinx_rtd_theme
