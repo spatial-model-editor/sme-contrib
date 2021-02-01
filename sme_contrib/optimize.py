@@ -129,11 +129,6 @@ def minimize(f, lowerbounds, upperbounds, particles=20, iterations=20, processes
     for each iteration, so for good performance the number of particles should
     be larger than the number of processes.
 
-    Note:
-        This choice of step size allows the different elements of x0 to have
-        vastly different scales without causing numerical instabilities,
-        but it will fail if an element of ``x0`` is equal to 0.
-
     Args:
         f: The function to evaluate, it should be callable as f(x) and return a scalar
         lowerbounds: The lower bound for each element of x.
@@ -143,7 +138,9 @@ def minimize(f, lowerbounds, upperbounds, particles=20, iterations=20, processes
         processes: The number of processes to use (if not set uses all available cpu cores)
 
     Returns:
-        np.array: The Hessian as a 2d numpy array of floats
+        ps_cost: The lowest cost
+        ps_res: The parameters that gave this lowest cost
+        optimizer: The PySwarms optimizer object
 
     .. _finite difference:
         https://en.wikipedia.org/wiki/Finite_difference#Multivariate_finite_differences
@@ -161,7 +158,7 @@ def minimize(f, lowerbounds, upperbounds, particles=20, iterations=20, processes
     ps_cost, ps_res = optimizer.optimize(
         _minimize_f, iters=iterations, f=f, processes=processes
     )
-    return ps_cost, ps_res
+    return ps_cost, ps_res, optimizer
 
 
 def rescale(x, new_max_element):
