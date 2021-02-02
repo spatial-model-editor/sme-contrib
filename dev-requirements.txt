@@ -1,6 +1,3 @@
 numdifftools
-numpy
-pyswarms
 pytest
 scipy
-sme

@@ -8,11 +8,12 @@ with open("requirements.txt") as f:
 
 setup(
     name="sme_contrib",
-    version="0.0.4",
+    version="0.0.5",
     author="Liam Keegan",
     author_email="liam@keegan.ch",
     description="Useful modules for use with sme (Spatial Model Editor)",
     long_description=long_description,
+    long_description_content_type="text/markdown",
     url="http://github.com/spatial-model-editor/sme_contrib",
     classifiers=[
         "Topic :: Scientific/Engineering :: Bio-Informatics",
@@ -25,7 +26,6 @@ setup(
         "Operating System :: POSIX :: Linux",
         "Programming Language :: C++",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
