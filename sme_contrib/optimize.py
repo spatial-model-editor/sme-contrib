@@ -241,6 +241,10 @@ class SteadyState:
             to the desired concentration in the fit can be adjusted by altering ``steady_state_time``.
             The larger it is, the closer the results will be to a steady state.
 
+    Attributes:
+        params(numpy.array): The best model parameters found
+        cost_history(List of float): The history of the best cost at each iteration
+        cost_history_pbest(List of float): The history of the mean particle best at each iteration
     """
 
     def __init__(
@@ -317,7 +321,9 @@ class SteadyState:
         )
         if len(results) == 1:
             # simulation fail or timeout
-            print("simulation timeout")
+            print(
+                f"simulation timeout with timeout {self.timeout_seconds}s, params: {params}"
+            )
             return abs_diff(0, self.target_conc)
         c, dcdt = self._rescale(results[-1])
         conc_norm = abs_diff(c, self.target_conc)
@@ -339,6 +345,15 @@ class SteadyState:
 
         Returns:
             List of float: the best parameters found
+
+        Note:
+            On Windows, calling this function from a jupyter notebook can result in an error
+            message of the form `Can't get attribute 'apply_params' on <module '__main__'`,
+            where ``apply_params`` is the function you have defined to apply the parameters to the model.
+            This is a known `issue <https://docs.python.org/3/library/multiprocessing.html#using-a-pool-of-workers>`_
+            with Python multiprocessing, and a workaround is to define the ``apply_params`` function
+            in a separate `.py` file and import it into the notebook.
+
         """
         cost, params, optimizer = minimize(
             self._obj_func,
@@ -349,7 +364,7 @@ class SteadyState:
             processes=processes,
         )
         self.cost_history = optimizer.cost_history
-        self.mean_pbest_history = optimizer.mean_pbest_history
+        self.cost_history_pbest = optimizer.mean_pbest_history
         self.conc_norm, self.dcdt_norm, self.model_conc = self._obj_func(
             params, verbose=True
         )
@@ -411,8 +426,8 @@ class SteadyState:
             matplotlib.axes._subplots.AxesSubplot: The axes the plot was drawn on
         """
         return _ss_plot_line(
-            [*range(len(self.mean_pbest_history))],
-            self.mean_pbest_history,
+            [*range(len(self.cost_history_pbest))],
+            self.cost_history_pbest,
             "Mean particle best cost history",
             ax,
         )
