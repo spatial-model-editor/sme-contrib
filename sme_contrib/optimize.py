@@ -253,6 +253,7 @@ class SteadyState:
         upper_bounds,
         simulation_time=1000,
         steady_state_time=200,
+        timeout_seconds=10,
     ):
         self.filename = modelfile
         self.species = species
@@ -262,6 +263,7 @@ class SteadyState:
         self.apply_params = function_to_apply_params
         self.lower_bounds = lower_bounds
         self.upper_bounds = upper_bounds
+        self.timeout_seconds = timeout_seconds
 
     def set_target_image(self, imagefile):
         """Set a new target concentration image
@@ -310,7 +312,7 @@ class SteadyState:
         results = m.simulate(
             simulation_time=self.simulation_time,
             image_interval=self.simulation_time,
-            timeout_seconds=10,
+            timeout_seconds=self.timeout_seconds,
             throw_on_timeout=False,
         )
         if len(results) == 1:
@@ -353,6 +355,9 @@ class SteadyState:
         )
         self.params = params
         return params
+
+    def hessian(self, rel_eps=0.1, processes=None):
+        return hessian(self._obj_func, self.params, rel_eps, processes)
 
     def plot_target_concentration(self, ax=None):
         """Plot the target concentration as a 2d heat map
