@@ -89,3 +89,7 @@ def test_steady_state() -> None:
     params = ss.find(particles=4, iterations=10)
     # few particles/iterations: require [0.001, 10.0] -> [-1, 5]
     assert np.abs(params[0] - 2.0) < 3.0
+    assert (
+        ss.get_model().compartments["Nucleus"].species["A_nucl"].diffusion_constant
+        == params[0]
+    )

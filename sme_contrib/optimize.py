@@ -466,3 +466,13 @@ class SteadyState:
             concs.append(np.sum(self._get_conc(result)))
             times.append(result.time_point)
         return _ss_plot_line(times, concs, "Concentration time series", ax)
+
+    def get_model(self):
+        """Returns the model with best parameters applied
+
+        Returns:
+            sme.Model: The model with the best parameters applied
+        """
+        m = sme.open_sbml_file(self.filename)
+        self.apply_params(m, self.params)
+        return m
