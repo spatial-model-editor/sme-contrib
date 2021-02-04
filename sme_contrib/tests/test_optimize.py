@@ -38,7 +38,12 @@ def _f(x):
 
 def test_minimize() -> None:
     cost, res, optimizer = opt.minimize(
-        _f, [-5.0, -5.0], [5.0, 5.0], particles=24, iterations=100
+        _f,
+        [-5.0, -5.0],
+        [5.0, 5.0],
+        particles=24,
+        iterations=20,
+        ps_options={"c1": 2.025, "c2": 2.025, "w": 0.5},
     )
     assert np.abs(res[0] - 0.375) < 0.100
     assert np.abs(res[1] + 0.900) < 0.100

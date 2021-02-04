@@ -117,7 +117,15 @@ def _minimize_f(xs, f, processes):
 
 
 # minimize objective function using particle swarm
-def minimize(f, lowerbounds, upperbounds, particles=20, iterations=20, processes=None):
+def minimize(
+    f,
+    lowerbounds,
+    upperbounds,
+    particles=20,
+    iterations=20,
+    processes=None,
+    ps_options=None,
+):
     """Minimize function ``f`` using particle swarm
 
     The function ``f`` should take an array or list of parameters ``x``, and return a
@@ -138,6 +146,7 @@ def minimize(f, lowerbounds, upperbounds, particles=20, iterations=20, processes
         particles: The number of particles to use in the swarm
         iterations: The number of iterations to do
         processes: The number of processes to use (the default ``None`` means use all available cpu cores)
+        ps_options: A map of the particle swarm hyper parameters to use
 
     Returns:
         ps_cost: The lowest cost
@@ -150,11 +159,12 @@ def minimize(f, lowerbounds, upperbounds, particles=20, iterations=20, processes
     """
     if processes == None:
         processes = cpu_count()
-    options = {"c1": 0.5, "c2": 0.3, "w": 0.9}
+    if ps_options == None:
+        ps_options = {"c1": 0.5, "c2": 0.3, "w": 0.9}
     optimizer = ps.single.GlobalBestPSO(
         particles,
         dimensions=len(lowerbounds),
-        options=options,
+        options=ps_options,
         bounds=(np.array(lowerbounds), np.array(upperbounds)),
     )
     ps_cost, ps_res = optimizer.optimize(
