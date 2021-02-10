@@ -204,12 +204,10 @@ def abs_diff(x, y):
 
 
 # plot 2d array as heat-map image
-def _ss_plot_image(conc, title, ax=None):
+def _ss_plot_image(conc, title, ax=None, cmap=None):
     if ax is None:
         ax = plt.gca()
-    ax.imshow(conc)
-    # ax.colorbar()
-    # plt.axis("off")
+    ax.imshow(conc, cmap=cmap)
     ax.set_title(title)
     return ax
 
@@ -384,18 +382,19 @@ class SteadyState:
     def hessian(self, rel_eps=0.1, processes=None):
         return hessian(self._obj_func, self.params, rel_eps, processes)
 
-    def plot_target_concentration(self, ax=None):
+    def plot_target_concentration(self, ax=None, cmap=None):
         """Plot the target concentration as a 2d heat map
 
         Args:
             ax(matplotlib.axes._subplots.AxesSubplot): Optionally specify the axes to draw the plot on
+            cmap(matplotlib.Colormap): Optionally specify the colormap to use
 
         Returns:
             matplotlib.axes._subplots.AxesSubplot: The axes the plot was drawn on
         """
-        return _ss_plot_image(self.target_conc, "Target Concentration", ax)
+        return _ss_plot_image(self.target_conc, "Target Concentration", ax, cmap)
 
-    def plot_model_concentration(self, ax=None):
+    def plot_model_concentration(self, ax=None, cmap=None):
         """Plot the model concentration as a 2d heat map
 
         The model concentration is normalized such that the maximum pixel intensity
@@ -403,11 +402,12 @@ class SteadyState:
 
         Args:
             ax(matplotlib.axes._subplots.AxesSubplot): Optionally specify the axes to draw the plot on
+            cmap(matplotlib.Colormap): Optionally specify the colormap to use
 
         Returns:
             matplotlib.axes._subplots.AxesSubplot: The axes the plot was drawn on
         """
-        return _ss_plot_image(self.model_conc, "Model Concentration", ax)
+        return _ss_plot_image(self.model_conc, "Model Concentration", ax, cmap)
 
     def plot_cost_history(self, ax=None):
         """Plot the cost history
@@ -467,11 +467,14 @@ class SteadyState:
             times.append(result.time_point)
         return _ss_plot_line(times, concs, "Concentration time series", ax)
 
-    def plot_all(self):
+    def plot_all(self, cmap=None):
         """Generate all plots
 
         Helper function for interactive use in a jupyter notebook.
-        Generates all plots for user to see at a glance the results of the fit.
+        Generates and shows all plots for user to see at a glance the results of the fit.
+
+        Args:
+            cmap(matplotlib.Colormap): Optionally specify the colormap to use for heatmap plots
         """
         fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(20, 12))
         self.plot_cost_history(ax1)
@@ -480,8 +483,8 @@ class SteadyState:
         plt.show()
 
         fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(18, 12))
-        self.plot_target_concentration(ax1)
-        self.plot_model_concentration(ax2)
+        self.plot_target_concentration(ax1, cmap)
+        self.plot_model_concentration(ax2, cmap)
         plt.show()
 
     def get_model(self):

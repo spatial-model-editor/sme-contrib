@@ -2,7 +2,29 @@
 
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap as lscmap
 import sme
+
+
+def colormap(color, name="my colormap"):
+    """Create a linear matplotlib colormap
+
+    The minimum value corresponds to the color black,
+    and the maximum value corresponds to the supplied ``color``.
+
+    This color can be supplied as a triplet of floats in the range from zero
+    to one, or as a hex RGB string ``"#rgb`` or ``"#rrggbb``.
+
+    So for example, three equivalent ways to set the ``color`` to red would be
+    ``(1.0, 0.0, 0.0)``, ``#f00``, or ``"#ff0000"``.
+
+    Args:
+        color: RBG triplet of floats between 0 and 1, or hex RGB string
+
+    Returns:
+        matplotlib.Colormap: the Colormap
+    """
+    return lscmap.from_list(name, [(0, 0, 0), color], 256)
 
 
 def concentration_heatmap(simulation_result, species, title=None, ax=None, cmap=None):
@@ -16,7 +38,7 @@ def concentration_heatmap(simulation_result, species, title=None, ax=None, cmap=
         species (List of str): The species to plot
         title (str): Optionally specify the title
         ax(matplotlib.axes._subplots.AxesSubplot): Optionally specify the axes to draw the plot on
-        cmap: Optionally specify the colormap to use
+        cmap(matplotlib.Colormap): Optionally specify the colormap to use
 
     Returns:
         matplotlib.axes._subplots.AxesSubplot: The axes the plot was drawn on
