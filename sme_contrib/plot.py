@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 import sme
 
 
-def concentration_heatmap(simulation_result, species, title=None, ax=None):
+def concentration_heatmap(simulation_result, species, title=None, ax=None, cmap=None):
     """Plot 2d heatmap of species concentration
 
     Plots the concentration of species in the list ``species``
@@ -16,6 +16,7 @@ def concentration_heatmap(simulation_result, species, title=None, ax=None):
         species (List of str): The species to plot
         title (str): Optionally specify the title
         ax(matplotlib.axes._subplots.AxesSubplot): Optionally specify the axes to draw the plot on
+        cmap: Optionally specify the colormap to use
 
     Returns:
         matplotlib.axes._subplots.AxesSubplot: The axes the plot was drawn on
@@ -28,6 +29,6 @@ def concentration_heatmap(simulation_result, species, title=None, ax=None):
     c = np.array(simulation_result.species_concentration[species[0]])
     for i in range(1, len(species)):
         c = np.add(c, np.array(simulation_result.species_concentration[species[i]]))
-    ax.imshow(c)
+    ax.imshow(c, cmap=cmap)
     ax.set_title(title)
     return ax
