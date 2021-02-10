@@ -11,3 +11,4 @@ the python interface to `Spatial Model Editor <https://spatial-model-editor.read
    :recursive:
 
    sme_contrib.optimize
+   sme_contrib.plot

@@ -467,6 +467,23 @@ class SteadyState:
             times.append(result.time_point)
         return _ss_plot_line(times, concs, "Concentration time series", ax)
 
+    def plot_all(self):
+        """Generate all plots
+
+        Helper function for interactive use in a jupyter notebook.
+        Generates all plots for user to see at a glance the results of the fit.
+        """
+        fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(20, 12))
+        self.plot_cost_history(ax1)
+        self.plot_cost_history_pbest(ax2)
+        self.plot_timeseries(self.simulation_time, self.simulation_time / 100.0, ax3)
+        plt.show()
+
+        fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(18, 12))
+        self.plot_target_concentration(ax1)
+        self.plot_model_concentration(ax2)
+        plt.show()
+
     def get_model(self):
         """Returns the model with best parameters applied
 
