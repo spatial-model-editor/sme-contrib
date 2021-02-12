@@ -42,6 +42,7 @@ def concentration_heatmap(simulation_result, species, title=None, ax=None, cmap=
 
     Returns:
         matplotlib.axes._subplots.AxesSubplot: The axes the plot was drawn on
+        matplotlib.image.AxesImage: The axes of the image
     """
     if ax is None:
         ax = plt.gca()
@@ -51,6 +52,6 @@ def concentration_heatmap(simulation_result, species, title=None, ax=None, cmap=
     c = np.array(simulation_result.species_concentration[species[0]])
     for i in range(1, len(species)):
         c = np.add(c, np.array(simulation_result.species_concentration[species[i]]))
-    ax.imshow(c, cmap=cmap)
     ax.set_title(title)
-    return ax
+    im = ax.imshow(c, cmap=cmap)
+    return ax, im
