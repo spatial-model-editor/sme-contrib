@@ -332,7 +332,10 @@ class SteadyState:
             print(
                 f"simulation timeout with timeout {self.timeout_seconds}s, params: {params}"
             )
-            return abs_diff(0, self.target_conc)
+            conc_norm = abs_diff(0, self.target_conc)
+            if verbose:
+                return (conc_norm, conc_norm, 0)
+            return conc_norm
         c, dcdt = self._rescale(results[-1])
         conc_norm = abs_diff(c, self.target_conc)
         dcdt_norm = abs_diff(self.steady_state_time * dcdt, 0)
