@@ -26,10 +26,18 @@ def test_colormap() -> None:
 
 
 def test_concentration_heatmap() -> None:
-    modelfile = _get_abs_path("model.xml")
-    model = sme.open_sbml_file(modelfile)
+    model_file = _get_abs_path("model.xml")
+    model = sme.open_sbml_file(model_file)
     results = model.simulate(10, 10)
+    # single species
     ax, im = smeplot.concentration_heatmap(results[-1], ["A_nucl"])
     assert ax.title.get_text() == "Concentration of A_nucl at time 10.0"
+    # two species
     ax, im = smeplot.concentration_heatmap(results[-1], ["A_nucl", "A_cell"])
     assert ax.title.get_text() == "Concentration of A_nucl, A_cell at time 10.0"
+    # specify title, existing plot axis & colormap
+    colormap = smeplot.colormap((1, 0, 0), "red1")
+    ax, im = smeplot.concentration_heatmap(
+        results[-1], ["A_nucl", "A_cell"], "my Title", ax, colormap
+    )
+    assert ax.title.get_text() == "my Title"
