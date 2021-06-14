@@ -31,3 +31,5 @@ def test_concentration_heatmap() -> None:
     results = model.simulate(10, 10)
     ax, im = smeplot.concentration_heatmap(results[-1], ["A_nucl"])
     assert ax.title.get_text() == "Concentration of A_nucl at time 10.0"
+    ax, im = smeplot.concentration_heatmap(results[-1], ["A_nucl", "A_cell"])
+    assert ax.title.get_text() == "Concentration of A_nucl, A_cell at time 10.0"

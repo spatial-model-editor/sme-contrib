@@ -47,7 +47,7 @@ def concentration_heatmap(simulation_result, species, title=None, ax=None, cmap=
     if ax is None:
         ax = plt.gca()
     if title is None:
-        s = ",".join(species)
+        s = ", ".join(species)
         title = f"Concentration of {s} at time {simulation_result.time_point}"
     c = np.array(simulation_result.species_concentration[species[0]])
     for i in range(1, len(species)):
