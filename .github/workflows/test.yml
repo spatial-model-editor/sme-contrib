@@ -11,6 +11,8 @@ jobs:
         python-version: [3.6, 3.7, 3.8, 3.9]
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
@@ -24,3 +26,11 @@ jobs:
           name: ${{ matrix.os }}-${{ matrix.python-version }}
           fail_ci_if_error: true
           verbose: true
+      # https://stackoverflow.com/questions/12844451/test-test-coverage-with-python-in-sonar-not-showing-up
+      - run: sed -i 's/\/home\/runner\/work\/sme_contrib\/sme_contrib\///g' coverage.xml
+        if: matrix.os == 'ubuntu-18.04' && matrix.python-version == 3.9
+      - uses: sonarsource/sonarcloud-github-action@master
+        if: matrix.os == 'ubuntu-18.04' && matrix.python-version == 3.9
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
