@@ -3,7 +3,6 @@
 import numpy as np
 import multiprocessing
 import pyswarms as ps
-from functools import partial
 from os import cpu_count
 from PIL import Image
 from matplotlib import pyplot as plt
@@ -53,13 +52,12 @@ def hessian(f, x0, rel_eps=1e-2, processes=None):
         https://en.wikipedia.org/wiki/Finite_difference#Multivariate_finite_differences
 
     """
-    if processes == None:
+    if processes is None:
         processes = cpu_count()
     n = len(x0)
     # make list of arguments for each f call required
-    args = []
     # f(x)
-    args.append((f, x0, None, None, rel_eps))
+    args = [(f, x0, None, None, rel_eps)]
     # f([.., x_i+dx_i, ..])
     for i in range(n):
         args.append((f, x0, i, None, +rel_eps))
@@ -157,9 +155,9 @@ def minimize(
         https://en.wikipedia.org/wiki/Finite_difference#Multivariate_finite_differences
 
     """
-    if processes == None:
+    if processes is None:
         processes = cpu_count()
-    if ps_options == None:
+    if ps_options is None:
         ps_options = {"c1": 0.5, "c2": 0.3, "w": 0.9}
     optimizer = ps.single.GlobalBestPSO(
         particles,
@@ -252,7 +250,7 @@ class SteadyState:
         modelfile(str): The sbml file containing the model
         imagefile(str): The image file containing the target concentration
             Optionally this can instead be a dict of geometryimagefilename:targetconcentrationfilename,
-            in which case the model is simulataneously fitted to the target conentration image
+            in which case the model is simultaneously fitted to the target concentration image
             steady state for each geometry image.
         species(List of str): The species to compare to the target concentration
         function_to_apply_params: A function that sets the parameters in the model.
@@ -330,7 +328,7 @@ class SteadyState:
         c = self._get_conc(result)
         dcdt = self._get_dcdt(result)
         scale_factor = 1.0 / np.amax(c)
-        return (scale_factor * c, scale_factor * dcdt)
+        return scale_factor * c, scale_factor * dcdt
 
     def _obj_func(self, params, verbose=False):
         m = sme.open_sbml_file(self.filename)
@@ -361,7 +359,7 @@ class SteadyState:
             model_concs.append(c)
             obj_sum = obj_sum + conc_norm + dcdt_norm
         if verbose:
-            return (conc_norm, dcdt_norm, model_concs)
+            return conc_norm, dcdt_norm, model_concs
         return obj_sum
 
     def find(self, particles=20, iterations=20, processes=None):
@@ -410,6 +408,7 @@ class SteadyState:
         """Plot the target concentration as a 2d heat map
 
         Args:
+            index(int): Optionally specify index of concentration
             ax(matplotlib.axes._subplots.AxesSubplot): Optionally specify the axes to draw the plot on
             cmap(matplotlib.Colormap): Optionally specify the colormap to use
 
@@ -427,6 +426,7 @@ class SteadyState:
         matches the maximum pixel intensity of the target concentration image
 
         Args:
+            index(int): Optionally specify index of concentration
             ax(matplotlib.axes._subplots.AxesSubplot): Optionally specify the axes to draw the plot on
             cmap(matplotlib.Colormap): Optionally specify the colormap to use
 
@@ -476,6 +476,8 @@ class SteadyState:
         just to see by eye how close the simulation is to a steady state.
 
         Args:
+            simulation_time(float): The simulation time to simulate
+            image_interval_time(float): The interval in between images
             ax(matplotlib.axes._subplots.AxesSubplot): Optionally specify the axes to draw the plot on
 
         Returns:
