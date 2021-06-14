@@ -1,0 +1,4 @@
+[run]
+source = "sme_contrib"
+branch = True
+concurrency = "multiprocessing"
