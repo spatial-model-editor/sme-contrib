@@ -1,4 +1,5 @@
 import sme_contrib.optimize as opt
+import matplotlib
 import numdifftools
 import numpy as np
 import os.path
@@ -93,3 +94,24 @@ def test_steady_state() -> None:
         ss.get_model().compartments["Nucleus"].species["A_nucl"].diffusion_constant
         == params[0]
     )
+
+    # just check plots have correct titles for now
+    ax = ss.plot_target_concentration()
+    assert type(ax) == matplotlib.axes._subplots.Subplot
+    assert ax.get_title() == "Target Concentration"
+
+    ax = ss.plot_model_concentration()
+    assert type(ax) == matplotlib.axes._subplots.Subplot
+    assert ax.get_title() == "Model Concentration"
+
+    ax = ss.plot_cost_history()
+    assert type(ax) == matplotlib.axes._subplots.Subplot
+    assert ax.get_title() == "Best cost history"
+
+    ax = ss.plot_cost_history_pbest()
+    assert type(ax) == matplotlib.axes._subplots.Subplot
+    assert ax.get_title() == "Mean particle best cost history"
+
+    ax = ss.plot_timeseries(1, 1)
+    assert type(ax) == matplotlib.axes._subplots.Subplot
+    assert ax.get_title() == "Concentration time series"
