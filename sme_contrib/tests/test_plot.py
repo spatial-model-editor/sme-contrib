@@ -1,5 +1,4 @@
 import sme_contrib.plot as smeplot
-import numpy as np
 import sme
 import os.path
 
@@ -32,15 +31,21 @@ def test_concentration_heatmap() -> None:
     # single species
     ax, im = smeplot.concentration_heatmap(results[-1], ["A_nucl"])
     assert ax.title.get_text() == "Concentration of A_nucl at time 10.0"
+    assert im.get_array().shape == (100, 100)
+    assert im.get_array()[0, 0] == 0.0
     # two species
     ax, im = smeplot.concentration_heatmap(results[-1], ["A_nucl", "A_cell"])
     assert ax.title.get_text() == "Concentration of A_nucl, A_cell at time 10.0"
+    assert im.get_array().shape == (100, 100)
+    assert im.get_array()[0, 0] == 0.0
     # specify title, existing plot axis & colormap
     colormap = smeplot.colormap((1, 0, 0), "red1")
     ax, im = smeplot.concentration_heatmap(
         results[-1], ["A_nucl", "A_cell"], "my Title", ax, colormap
     )
     assert ax.title.get_text() == "my Title"
+    assert im.get_array().shape == (100, 100)
+    assert im.get_array()[0, 0] == 0.0
 
 
 def test_concentration_heatmap_animation() -> None:

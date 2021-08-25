@@ -46,8 +46,8 @@ def test_minimize() -> None:
         iterations=20,
         ps_options={"c1": 2.025, "c2": 2.025, "w": 0.5},
     )
-    assert np.abs(res[0] - 0.375) < 0.100
-    assert np.abs(res[1] + 0.900) < 0.100
+    assert np.abs(res[0] - 0.375) < 0.200
+    assert np.abs(res[1] + 0.900) < 0.200
 
 
 def test_rescale() -> None:
@@ -97,21 +97,21 @@ def test_steady_state() -> None:
 
     # just check plots have correct titles for now
     ax = ss.plot_target_concentration()
-    assert type(ax) == matplotlib.axes._subplots.Subplot
+    assert isinstance(ax, matplotlib.axes._subplots.Subplot)
     assert ax.get_title() == "Target Concentration"
 
     ax = ss.plot_model_concentration()
-    assert type(ax) == matplotlib.axes._subplots.Subplot
+    assert isinstance(ax, matplotlib.axes._subplots.Subplot)
     assert ax.get_title() == "Model Concentration"
 
     ax = ss.plot_cost_history()
-    assert type(ax) == matplotlib.axes._subplots.Subplot
+    assert isinstance(ax, matplotlib.axes._subplots.Subplot)
     assert ax.get_title() == "Best cost history"
 
     ax = ss.plot_cost_history_pbest()
-    assert type(ax) == matplotlib.axes._subplots.Subplot
+    assert isinstance(ax, matplotlib.axes._subplots.Subplot)
     assert ax.get_title() == "Mean particle best cost history"
 
     ax = ss.plot_timeseries(1, 1)
-    assert type(ax) == matplotlib.axes._subplots.Subplot
+    assert isinstance(ax, matplotlib.axes._subplots.Subplot)
     assert ax.get_title() == "Concentration time series"

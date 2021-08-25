@@ -4,7 +4,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap as lscmap
 from matplotlib import animation
-import sme
 
 
 def colormap(color, name="my colormap"):
