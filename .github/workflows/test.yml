@@ -18,8 +18,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: pip install -r requirements.txt
       - run: pip install -r dev-requirements.txt
-      - run: python -m pytest --cov=sme_contrib --cov-report xml -v
-      - uses: codecov/codecov-action@v1
+      - run: python -m pytest --cov=sme_contrib --cov-report=xml -v
+      - uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
@@ -27,7 +27,7 @@ jobs:
           fail_ci_if_error: true
           verbose: true
       # https://stackoverflow.com/questions/12844451/test-test-coverage-with-python-in-sonar-not-showing-up
-      - run: sed -i 's/\/home\/runner\/work\/sme_contrib\/sme_contrib\///g' coverage.xml
+      - run: coverage xml -i
         if: matrix.os == 'ubuntu-20.04' && matrix.python-version == 3.9
       - uses: sonarsource/sonarcloud-github-action@master
         if: matrix.os == 'ubuntu-20.04' && matrix.python-version == 3.9

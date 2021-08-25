@@ -4,6 +4,8 @@ version: 2
 
 build:
   image: latest
+  apt_packages:
+    - ffmpeg
 
 sphinx:
   builder: html

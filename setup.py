@@ -8,7 +8,7 @@ with open("requirements.txt") as f:
 
 setup(
     name="sme_contrib",
-    version="0.0.12",
+    version="0.0.13",
     author="Liam Keegan",
     author_email="liam@keegan.ch",
     description="Useful modules for use with sme (Spatial Model Editor)",
@@ -33,6 +33,7 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
     ],
     license="MIT",
     packages=find_packages(exclude=["docs", "tests"]),
