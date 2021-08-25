@@ -3,11 +3,13 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap as lscmap
+from matplotlib import animation
 import sme
 
 
 def colormap(color, name="my colormap"):
-    """Create a linear matplotlib colormap
+    """
+    Create a linear matplotlib colormap
 
     The minimum value corresponds to the color black,
     and the maximum value corresponds to the supplied ``color``.
@@ -28,7 +30,8 @@ def colormap(color, name="my colormap"):
 
 
 def concentration_heatmap(simulation_result, species, title=None, ax=None, cmap=None):
-    """Plot 2d heatmap of species concentration
+    """
+    Plot 2d heatmap of species concentration
 
     Plots the concentration of species in the list ``species``
     from the supplied ``simulation_result`` as a 2d heatmap.
@@ -49,9 +52,58 @@ def concentration_heatmap(simulation_result, species, title=None, ax=None, cmap=
     if title is None:
         s = ", ".join(species)
         title = f"Concentration of {s} at time {simulation_result.time_point}"
-    c = np.array(simulation_result.species_concentration[species[0]])
+    c = simulation_result.species_concentration[species[0]]
     for i in range(1, len(species)):
-        c = np.add(c, np.array(simulation_result.species_concentration[species[i]]))
+        c = np.add(c, simulation_result.species_concentration[species[i]])
     ax.set_title(title)
     im = ax.imshow(c, cmap=cmap)
     return ax, im
+
+
+def concentration_heatmap_animation(
+    simulation_results, species, title=None, figsize=None, interval=200
+):
+    """
+    Plot 2d animated heatmap of species concentration
+
+    Plots the concentration of species in the list ``species``
+    from the supplied list ``simulation_results`` as an animated 2d heatmap.
+
+    Args:
+        simulation_results (List of sme.SimulationResult): A simulation result to plot
+        species (List of str): The species to plot
+        title (str): Optionally specify the title
+        figsize ((float, float)): Optionally specify the figure size
+        interval: Optionally specify the interval in ms between images
+
+    Returns:
+        matplotlib.animation.ArtistAnimation: the matplotlib animation
+    """
+    fig = plt.figure(figsize=figsize)
+    ax = plt.gca()
+    if title is None:
+        s = ", ".join(species)
+        title = f"Concentration of {s}"
+    artists = []
+    for simulation_result in simulation_results:
+        c = simulation_result.species_concentration[species[0]]
+        for i in range(1, len(species)):
+            c = np.add(c, np.array(simulation_result.species_concentration[species[i]]))
+        artists.append(
+            [
+                ax.imshow(c, animated=True, interpolation=None),
+                ax.text(
+                    0.5,
+                    1.01,
+                    f"{title}: t = {simulation_result.time_point}",
+                    horizontalalignment="center",
+                    verticalalignment="bottom",
+                    transform=ax.transAxes,
+                ),
+            ]
+        )
+    anim = animation.ArtistAnimation(
+        fig, artists, interval=interval, blit=True, repeat=False
+    )
+    plt.close()
+    return anim

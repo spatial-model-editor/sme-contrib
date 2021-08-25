@@ -41,3 +41,30 @@ def test_concentration_heatmap() -> None:
         results[-1], ["A_nucl", "A_cell"], "my Title", ax, colormap
     )
     assert ax.title.get_text() == "my Title"
+
+
+def test_concentration_heatmap_animation() -> None:
+    model_file = _get_abs_path("model.xml")
+    model = sme.open_sbml_file(model_file)
+    results = model.simulate(10, 10)
+    n = len(results)
+    # single species
+    anim = smeplot.concentration_heatmap_animation(results, ["A_nucl"])
+    assert sum(1 for _ in anim.new_frame_seq()) == n
+    for frame, result in zip(anim.new_frame_seq(), results):
+        assert (
+            frame[1].get_text() == f"Concentration of A_nucl: t = {result.time_point}"
+        )
+    # single species: specify title
+    anim = smeplot.concentration_heatmap_animation(results, ["A_nucl"], title="TTL")
+    assert sum(1 for _ in anim.new_frame_seq()) == n
+    for frame, result in zip(anim.new_frame_seq(), results):
+        assert frame[1].get_text() == f"TTL: t = {result.time_point}"
+    # two species
+    anim = smeplot.concentration_heatmap_animation(results, ["A_nucl", "A_cell"])
+    assert sum(1 for _ in anim.new_frame_seq()) == n
+    for frame, result in zip(anim.new_frame_seq(), results):
+        assert (
+            frame[1].get_text()
+            == f"Concentration of A_nucl, A_cell: t = {result.time_point}"
+        )
