@@ -327,7 +327,7 @@ class SteadyState:
     def _rescale(self, result):
         c = self._get_conc(result)
         dcdt = self._get_dcdt(result)
-        scale_factor = 1.0 / np.amax(c)
+        scale_factor = 1.0 / np.clip(np.amax(c), 1e-100, 1e100)
         return scale_factor * c, scale_factor * dcdt
 
     def _obj_func(self, params, verbose=False):
