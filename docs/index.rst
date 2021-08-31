@@ -29,6 +29,7 @@ API Reference
    :caption: Example jupyter notebooks
 
    notebooks/plot
+   notebooks/optimize
 
 Source code
 -----------
