@@ -10,6 +10,6 @@
 [![sonarcloud quality gate status](https://sonarcloud.io/api/project_badges/measure?project=spatial-model-editor_sme_contrib&metric=alert_status)](https://sonarcloud.io/dashboard?id=spatial-model-editor_sme_contrib)
 
 A collection of useful modules for use with [sme](https://pypi.org/project/sme/),
-the python interface to [Spatial Model Editor](https://github.com/spatial-model-editor/spatial-model-editor).
+the python interface to [Spatial Model Editor](https://spatial-model-editor.github.io).
 
 See the [online documentation](https://sme-contrib.readthedocs.io) for more information.

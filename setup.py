@@ -14,10 +14,11 @@ setup(
     description="Useful modules for use with sme (Spatial Model Editor)",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://sme_contrib.readthedocs.io/",
+    url="https://spatial-model-editor.github.io/",
     project_urls={
-        "Github": "https://github.com/spatial-model-editor/sme_contrib",
-        "Issues": "https://github.com/spatial-model-editor/sme_contrib/issues",
+        "Documentation": "https://sme-contrib.readthedocs.io/",
+        "Github": "https://github.com/spatial-model-editor/sme-contrib",
+        "Issues": "https://github.com/spatial-model-editor/sme-contrib/issues",
     },
     classifiers=[
         "Topic :: Scientific/Engineering :: Bio-Informatics",
