@@ -8,7 +8,7 @@ with open("requirements.txt") as f:
 
 setup(
     name="sme_contrib",
-    version="0.0.13",
+    version="0.0.14",
     author="Liam Keegan",
     author_email="liam@keegan.ch",
     description="Useful modules for use with sme (Spatial Model Editor)",
