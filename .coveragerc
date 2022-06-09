@@ -1,5 +1,4 @@
 [run]
-source = "sme_contrib"
-omit = "sme_contrib/tests/*"
+source = "src/sme_contrib"
 branch = True
 #concurrency = "multiprocessing"

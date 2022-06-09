@@ -1,4 +1,0 @@
-numdifftools
-pytest
-pytest-cov
-scipy
