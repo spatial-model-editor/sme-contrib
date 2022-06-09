@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sme_contrib"
+description = "Useful modules for use with sme (Spatial Model Editor)"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Liam Keegan", email = "liam@keegan.ch" }]
+requires-python = ">=3.6"
+classifiers = [
+  "Topic :: Scientific/Engineering :: Bio-Informatics",
+  "License :: OSI Approved :: MIT License",
+  "Intended Audience :: Science/Research",
+  "Intended Audience :: Education",
+  "Natural Language :: English",
+  "Operating System :: MacOS :: MacOS X",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.6",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+]
+dependencies = ["matplotlib", "numpy", "pillow", "pyswarms", "sme"]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://spatial-model-editor.github.io/"
+Documentation = "https://sme-contrib.readthedocs.io/"
+Github = "https://github.com/spatial-model-editor/sme-contrib"
+Issues = "https://github.com/spatial-model-editor/sme-contrib/issues"
+
+[project.optional-dependencies]
+tests = ["numdifftools", "pytest", "pytest-cov", "scipy"]
+docs = [
+  "ipykernel",
+  "matplotlib",
+  "nbsphinx",
+  "pandoc",
+  "sphinx>=4.5.0",
+  "sphinx_rtd_theme>=1.0.0"
+]
+
+[tool.setuptools.dynamic]
+version = { attr = "sme_contrib.__version__" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
