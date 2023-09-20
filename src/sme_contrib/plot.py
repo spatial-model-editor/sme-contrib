@@ -28,7 +28,9 @@ def colormap(color, name="my colormap"):
     return lscmap.from_list(name, [(0, 0, 0), color], 256)
 
 
-def concentration_heatmap(simulation_result, species, title=None, ax=None, cmap=None):
+def concentration_heatmap(
+    simulation_result, species, z_slice: int = 0, title=None, ax=None, cmap=None
+):
     """
     Plot 2d heatmap of species concentration
 
@@ -38,6 +40,7 @@ def concentration_heatmap(simulation_result, species, title=None, ax=None, cmap=
     Args:
         simulation_result (sme.SimulationResult): A simulation result to plot
         species (List of str): The species to plot
+        z_slice (int): The z-slice to plot
         title (str): Optionally specify the title
         ax(matplotlib.axes._subplots.AxesSubplot): Optionally specify the axes to draw the plot on
         cmap(matplotlib.Colormap): Optionally specify the colormap to use
@@ -51,16 +54,21 @@ def concentration_heatmap(simulation_result, species, title=None, ax=None, cmap=
     if title is None:
         s = ", ".join(species)
         title = f"Concentration of {s} at time {simulation_result.time_point}"
-    c = simulation_result.species_concentration[species[0]]
+    c = simulation_result.species_concentration[species[0]][z_slice, :]
     for i in range(1, len(species)):
-        c = np.add(c, simulation_result.species_concentration[species[i]])
+        c = np.add(c, simulation_result.species_concentration[species[i]][z_slice, :])
     ax.set_title(title)
     im = ax.imshow(c, cmap=cmap)
     return ax, im
 
 
 def concentration_heatmap_animation(
-    simulation_results, species, title=None, figsize=None, interval=200
+    simulation_results,
+    species,
+    z_slice: int = 0,
+    title=None,
+    figsize=None,
+    interval=200,
 ):
     """
     Plot 2d animated heatmap of species concentration
@@ -71,6 +79,7 @@ def concentration_heatmap_animation(
     Args:
         simulation_results (List of sme.SimulationResult): A simulation result to plot
         species (List of str): The species to plot
+        z_slice (int): The z-slice to plot
         title (str): Optionally specify the title
         figsize ((float, float)): Optionally specify the figure size
         interval: Optionally specify the interval in ms between images
@@ -85,9 +94,14 @@ def concentration_heatmap_animation(
         title = f"Concentration of {s}"
     artists = []
     for simulation_result in simulation_results:
-        c = simulation_result.species_concentration[species[0]]
+        c = simulation_result.species_concentration[species[0]][z_slice, :]
         for i in range(1, len(species)):
-            c = np.add(c, np.array(simulation_result.species_concentration[species[i]]))
+            c = np.add(
+                c,
+                np.array(
+                    simulation_result.species_concentration[species[i]][z_slice, :]
+                ),
+            )
         artists.append(
             [
                 ax.imshow(c, animated=True, interpolation=None),
