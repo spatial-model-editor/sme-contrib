@@ -8,7 +8,7 @@ description = "Useful modules for use with sme (Spatial Model Editor)"
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "Liam Keegan", email = "liam@keegan.ch" }]
-requires-python = ">=3.6"
+requires-python = ">=3.7"
 classifiers = [
   "Topic :: Scientific/Engineering :: Bio-Informatics",
   "License :: OSI Approved :: MIT License",
@@ -19,13 +19,13 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
   "Operating System :: POSIX :: Linux",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.6",
   "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
 ]
-dependencies = ["matplotlib", "numpy", "pillow", "pyswarms", "sme"]
+dependencies = ["matplotlib", "numpy", "pillow", "pyswarms", "sme>=1.4.0"]
 dynamic = ["version"]
 
 [project.urls]

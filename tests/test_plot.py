@@ -41,7 +41,7 @@ def test_concentration_heatmap() -> None:
     # specify title, existing plot axis & colormap
     colormap = smeplot.colormap((1, 0, 0), "red1")
     ax, im = smeplot.concentration_heatmap(
-        results[-1], ["A_nucl", "A_cell"], "my Title", ax, colormap
+        results[-1], ["A_nucl", "A_cell"], title="my Title", ax=ax, cmap=colormap
     )
     assert ax.title.get_text() == "my Title"
     assert im.get_array().shape == (100, 100)

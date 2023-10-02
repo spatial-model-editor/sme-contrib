@@ -241,10 +241,12 @@ def _get_geometry_mask(model):
 class SteadyState:
     """Steady state parameter fitting
 
-    Given a model and an image of the target steady state distribution of
+    Given a 2d model and an image of the target steady state distribution of
     a species (or the sum of multiple species), this class tries to find
     a set of parameters where the simulated model has a steady state solution
     that is as close as possible to the target image.
+
+    Note: This functionality assumes the model is 2d, i.e. it only takes into account the first z-slice of a 3d model
 
     Args:
         modelfile(str): The sbml file containing the model
@@ -295,7 +297,7 @@ class SteadyState:
             # single target image, use existing model geometry
             self.geom_img_files.append("")
             m = sme.open_sbml_file(self.filename)
-            mask = _get_geometry_mask(m)
+            mask = _get_geometry_mask(m)[0, :]
             self.target_concs.append(_img_as_normalized_nparray(imagefile, mask))
         else:
             # multiple geometry images, each with target concentration image
@@ -303,7 +305,7 @@ class SteadyState:
                 self.geom_img_files.append(geom_img_file)
                 m = sme.open_sbml_file(self.filename)
                 m.import_geometry_from_image(geom_img_file)
-                mask = _get_geometry_mask(m)
+                mask = _get_geometry_mask(m)[0, :]
                 self.target_concs.append(_img_as_normalized_nparray(imgfile, mask))
         self.simulation_time = simulation_time
         self.steady_state_time = steady_state_time
@@ -313,13 +315,15 @@ class SteadyState:
         self.timeout_seconds = timeout_seconds
 
     def _get_conc(self, result):
-        c = np.array(result.species_concentration[self.species[0]])
+        # return z=0 slice of concentrations
+        c = np.array(result.species_concentration[self.species[0]])[0, :]
         for i in range(1, len(self.species)):
             c = np.add(c, np.array(result.species_concentration[self.species[i]]))
         return c
 
     def _get_dcdt(self, result):
-        dcdt = np.array(result.species_dcdt[self.species[0]])
+        # return z=0 slice of dcdt
+        dcdt = np.array(result.species_dcdt[self.species[0]])[0, :]
         for i in range(1, len(self.species)):
             dcdt = np.add(dcdt, np.array(result.species_dcdt[self.species[i]]))
         return dcdt
