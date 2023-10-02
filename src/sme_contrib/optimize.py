@@ -316,16 +316,16 @@ class SteadyState:
 
     def _get_conc(self, result):
         # return z=0 slice of concentrations
-        c = np.array(result.species_concentration[self.species[0]])[0, :]
-        for i in range(1, len(self.species)):
-            c = np.add(c, np.array(result.species_concentration[self.species[i]]))
+        c = np.zeros(result.species_concentration[self.species[0]].shape[1:])
+        for s in self.species:
+            c += result.species_concentration[s][0, :]
         return c
 
     def _get_dcdt(self, result):
         # return z=0 slice of dcdt
-        dcdt = np.array(result.species_dcdt[self.species[0]])[0, :]
-        for i in range(1, len(self.species)):
-            dcdt = np.add(dcdt, np.array(result.species_dcdt[self.species[i]]))
+        dcdt = np.zeros(result.species_dcdt[self.species[0]].shape[1:])
+        for s in self.species:
+            dcdt += result.species_dcdt[s][0, :]
         return dcdt
 
     def _rescale(self, result):
