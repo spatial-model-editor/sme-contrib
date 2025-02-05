@@ -19,13 +19,15 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
   "Operating System :: POSIX :: Linux",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.7",
-  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+
 ]
-dependencies = ["matplotlib", "numpy", "pillow", "pyswarms", "sme>=1.4.0"]
+dependencies = ["matplotlib", "numpy", "pillow", "pyswarms", "sme>=1.4.0","pyvista[all]"]
+
 dynamic = ["version"]
 
 [project.urls]
