@@ -1,17 +1,20 @@
 import pyvista as pv
 import numpy as np
-from typing import Callable
+from typing import Callable, Any
+from itertools import cycle
+import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
+import sme
 
 
 def rgb_to_scalar(img: np.ndarray) -> np.ndarray:
-    """Convert an array of RGB values to scalar values.
-        This function is necessary because pyvista does not support RGB values directly as mesh data
+    """
+    Convert an RGB image 3D image to a scalar image where each unique RGB value is assigned a unique scalar.
 
-    Args:
-        img (np.ndarray): data to be converted, of shape (n, m, 3)
+        img (np.ndarray): A 3D numpy array representing an RGB image with shape (height, width, 3).
 
-    Returns:
-        np.ndarray: data converted to scalar values, of shape (n, m)
+        np.ndarray: A 2D numpy array with the same height and width as the input image, where each pixel's value
+                    corresponds to a unique scalar representing the original RGB value.
     """
     reshaped = img.reshape(-1, 3, copy=True)
     unique_rgb, ridx = np.unique(reshaped, axis=0, return_inverse=True)
@@ -20,16 +23,48 @@ def rgb_to_scalar(img: np.ndarray) -> np.ndarray:
     return values[ridx].reshape(img.shape[:-1])
 
 
-def _find_good_shape(num_plots: int, portrait: bool = False) -> tuple[int, int]:
-    """Find a good shape (rows, columns) for a grid of plots which should be such that
-        rows*columns >= num_plots and rows is as close to columns as possible and rows*columns is minimal.
-        There are sophisticated ways to do this, which are way beyond what is needed here, so a simple heuristic based on sqrt(num_plots) is used.
-    Args:
-        num_plots (int): number of plots to distribute
-        portrait (bool, optional): whether the plots should be in portrait mode. If yes, the rows will become the larger number and cols the smaller, otherwise, it will be the other way round. Defaults to False
+def make_discrete_colormap(
+    cmap: str = "tab10", values: np.ndarray = np.array([])
+) -> pv.LookupTable:
+    """
+    Create a discrete colormap for use with PyVista.
+
+    Parameters:
+    cmap (str): The name of the colormap to use. Default is 'tab10'.
+    values (np.ndarray): An array of values to map to colors. Default is an empty array.
 
     Returns:
-        tuple[int, int]: shape of the grid (rows, columns)
+    pv.LookupTable: A PyVista LookupTable object with the specified colormap and values.
+    """
+    cm = [(0, 0, 0, 1)]
+    i = 0
+
+    if values == []:
+        values = np.arange(len(cm))
+    for c in cycle(plt.get_cmap(cmap).colors):
+        cm.append(mcolors.to_rgba(c))
+        if len(cm) >= len(values):
+            break
+        i += 1
+
+    lt = pv.LookupTable(
+        values=np.array(cm * 255),
+        scalar_range=(0, len(values)),
+        n_values=len(values),
+    )
+
+    return lt
+
+
+def find_layout(num_plots: int, portrait: bool = False) -> tuple[int, int]:
+    """Find a reasonable layout for a grid of subplots. This splits num_subplots into n x m subplots where n and m are as close as possible to each other. This can include a case where n x m > num_plots. Then, the superficial panels in the grid are ignored in the plotting process.
+
+    Args:
+        num_plots (int): Number of plots to arrange
+        portrait (bool, optional): Whether the min or max of (n,m) should be the column number in the resulting grid. Defaults to False.
+
+    Returns:
+        tuple[int, int]: Tuple describing (n_rows, n_cols) of the grid
     """
     root = np.sqrt(num_plots)
     root_int = np.rint(root)
@@ -63,121 +98,150 @@ def _find_good_shape(num_plots: int, portrait: bool = False) -> tuple[int, int]:
         return b, b
 
 
-def _animate_with_func3D_facet(
-    filename: str,
-    data: dict[str, list[np.ndarray]],
-    titles: dict[str, list[str]],
-    plotfuncs: dict[str, Callable],
-    show_cmap: bool = False,
-    cmap: str | np.ndarray = "viridis",
-    portrait: bool = False,
-    linked_views: bool = True,
-    with_titles: bool = True,
-    plotter_kwargs: dict = {},
-) -> str:
-    """Animate a set of data with a corresponding set of plot functions.
-    The The list of data for each plot must be of equal length. Each element
-    of these lists will be one frame in the animation.
-    The result is stored as an .mp4 file.
-    Args:
-        filename (str): A filename or path to store the animation. This function automatically adds an .mp4 extension to the given filename.
-        data (dict[str, list[np.ndarray]]): The data to animate in each suplot. The keys are the labels for the plots and the values are lists of data to plot. Each element of these lists will be one frame in the animation. The lists must be of equal length.
-        titles (dict[str, list[str]]): The titles for each subplot. The keys are the labels for the plots and the values are lists of titles to display. Each element of these lists will be the title for the corresponding frame in the animation. Useful to have timestep labels for instance.
-        plotfuncs (dict[str, Callable]): Function to write the data into a frame in the plotter. Signature: func(data, plotter, show_cmap:bool = show_cmap, cmap=cmap)
-        show_cmap (bool, optional): whether to show the colormap in each plot or not. Defaults to False.
-        cmap (str | np.ndarray, optional): matplotlib colormap name. Defaults to "viridis".
-        portrait (bool, optional): Aspect ratio mode. if this is true, the larger dimension of the plot table will be the rows. Otherwise, the larger dimension will be the columns. Defaults to False.
-        linked_views (bool, optional): Whether to link all the views together for interactive plotting. If true, they will move in unison if one is moved. Defaults to True.
-        with_titles (bool, optional): If the labels should be used as titles. Defaults to True.
-        plotter_kwargs (dict, optional): Other keyword arguments passed to the plotter constructor. Defaults to {}.
-
-    Returns:
-        str: path to where the given animation is stored.
-    """
-
-    def create_frame(label):
-        for i in range(layout[0]):
-            for j in range(layout[1]):
-                plotter.subplot(i, j)
-
-                current_label = next(label)
-
-                if with_titles:
-                    plotter.add_text(titles[current_label][0])
-
-                plotfuncs[current_label](
-                    data[current_label][0], plotter, show_cmap=show_cmap, cmap=cmap
-                )
-
-                plotter.write_frame()
-
-    layout = _find_good_shape(len(data), portrait=portrait)
-
-    plotter = pv.Plotter(shape=layout, **plotter_kwargs)
-
-    plotter.open_movie(filename)
-
-    label = iter(data.keys())
-
-    create_frame(label)
-
-    if linked_views:
-        plotter.link_views()
-
-    current_label = next(iter(data.keys()))
-
-    for i in range(1, len(data[current_label])):
-        label = iter(data.keys())
-        create_frame(label)
-
-    plotter.close()
-
-    return filename
-
-
-def _plot3Dfacet(
+def facet_plot3D(
     data: dict[str, np.ndarray],
     plotfuncs: dict[str, Callable],
     show_cmap: bool = False,
-    cmap: str | np.ndarray = "viridis",
+    cmap: str | np.ndarray | pv.LookupTable = "viridis",
     portrait: bool = False,
     linked_views: bool = True,
     with_titles: bool = True,
     plotter_kwargs: dict = {},
+    plotfuncs_kwargs: dict[str, dict[str, Any]] = {},
 ) -> pv.Plotter:
-    """Plot a set of data with a corresponding set of plot functions into a grid of subplots, similar to seaborn facetplots.
+    """
+    Create a 3D facet plot using PyVista. This function creates a grid of subplots where each subplot is filled by a function in the plotfuncs argument. The keys for plotfuncs and data must be the same, such that plotfuncs can be unambiguously mapped over the data dictionary.
 
-    Args:
-        data (dict[str, np.ndarray]): Dictionary of data to plot. The keys are the labels for the plots and the values are the data to plot.
-        plotfuncs (dict[str, Callable]): Functions that take the data and a pyvista plotter object and plot the data into the each subplot.
-        show_cmap (bool, optional): whether to show the colormap in each plot or not. Defaults to False.
-        cmap (str | np.ndarray, optional): matplotlib colormap name. Defaults to "viridis".
-        portrait (bool, optional): Aspect ratio mode. if this is true, the larger dimension of the plot table will be the rows. Otherwise, the larger dimension will be the columns. Defaults to False.
-        linked_views (bool, optional): Whether to link all the views together for interactive plotting. If true, they will move in unison if one is moved. Defaults to True.
-        with_titles (bool, optional): If the labels should be used as titles. Defaults to True.
-        plotter_kwargs (dict, optional): Other keyword arguments passed to the plotter constructor. Defaults to {}.
+    Parameters:
+    -----------
+    data : dict[str, np.ndarray]
+        A dictionary where keys are labels and values are numpy arrays containing the data to be plotted.
+    plotfuncs : dict[str, Callable]
+        A dictionary where keys are labels and values are functions that take the label, data, plotter, and other optional arguments to create the plot.
+    show_cmap : bool, optional
+        Whether to show the color map. Default is False.
+    cmap : str | np.ndarray | pv.LookupTable, optional
+        The color map to use. Default is "viridis".
+    portrait : bool, optional
+        Whether to use a portrait layout. Default is False.
+    linked_views : bool, optional
+        Whether to link the views of the subplots. Default is True.
+    with_titles : bool, optional
+        Whether to include titles in the subplots. Default is True.
+    plotter_kwargs : dict, optional
+        Additional keyword arguments to pass to the PyVista Plotter.
+    plotfuncs_kwargs : dict[str, dict[str, Any]], optional
+        Additional keyword arguments to pass to each plotting function.
 
     Returns:
-        pv.Plotter: pyvista plotter object. Call plotter.show() to display the plot.
+    --------
+    pv.Plotter
+        The PyVista Plotter object with the created facet plot.
     """
-
-    layout = _find_good_shape(len(data), portrait=portrait)
+    layout = find_layout(len(data), portrait=portrait)
 
     plotter = pv.Plotter(shape=layout, **plotter_kwargs)
 
-    label = iter(data.keys())
+    label = iter(plotfuncs.keys())
 
     for i in range(layout[0]):
         for j in range(layout[1]):
-            plotter.subplot(i, j)
             current_label = next(label)
-            if with_titles:
-                plotter.add_text(current_label)
             plotfuncs[current_label](
-                data[current_label], plotter, show_cmap=show_cmap, cmap=cmap
+                current_label,
+                data[current_label],
+                plotter,
+                panel=(i, j),
+                show_cmap=show_cmap,
+                cmap=cmap,
+                **plotfuncs_kwargs.get(current_label, {}),
             )
 
     if linked_views:
         plotter.link_views()
 
     return plotter
+
+
+def facet_animate3D(
+    filename: str,
+    data: list[dict[str, np.ndarray]],
+    plotfuncs: dict[str, Callable],
+    show_cmap: bool = False,
+    cmap: str | np.ndarray | pv.LookupTable = "viridis",
+    portrait: bool = False,
+    linked_views: bool = True,
+    titles: list[dict[str, str]] = [],
+    with_titles: bool = True,
+    plotter_kwargs: dict = {},
+    plotfuncs_kwargs: dict[str, dict[str, Any]] = {},
+) -> str:
+    """
+    Create a 3D animation from a series of data snapshots using PyVista.
+    This series must be a list of dictionaries with the data for each frame keyed by a label used to title the panel it will be plotted into. The final plot will have as many subplots as there are labels in the data dictionaries. The keys for plotfuncs and data must be the same.
+    Parameters:
+    -----------
+    filename : str
+        The name of the output movie file.
+    data : list[dict[str, np.ndarray]]
+        A list of dictionaries containing the data for each timestep.
+    plotfuncs : dict[str, Callable]
+        A dictionary of plotting functions keyed by data label. The keys for plotfuncs and data must be the same.
+    show_cmap : bool, optional
+        Whether to show the color map (default is False).
+    cmap : str | np.ndarray | pv.LookupTable, optional
+        The colormap to use (default is "viridis").
+    portrait : bool, optional
+        Whether to use portrait layout (default is False).
+    linked_views : bool, optional
+        Whether to link the views of the subplots (default is True).
+    titles : list[dict[str, str]], optional
+        A list of dictionaries containing titles for each subplot (default is an empty list).
+    with_titles : bool, optional
+        Whether to include titles in the plots (default is True).
+    plotter_kwargs : dict, optional
+        Additional keyword arguments to pass to the PyVista Plotter (default is an empty dictionary).
+    plotfuncs_kwargs : dict[str, dict[str, Any]], optional
+        Additional keyword arguments to pass to each plotting function (default is an empty dictionary).
+    Returns:
+    --------
+    str
+        The filename of the created movie.
+    """
+
+    def create_frame(
+        data_dict: dict[str, np.ndarray], title: dict[str:str], layout=(1, 1)
+    ):
+        label = iter(data_dict.keys())
+        for i in range(layout[0]):
+            for j in range(layout[1]):
+                current_label = next(label)
+                plotfuncs[current_label](
+                    title.get(current_label, current_label),
+                    data_dict[current_label],
+                    plotter,
+                    panel=(i, j),
+                    show_cmap=show_cmap,
+                    cmap=cmap,
+                    **plotfuncs_kwargs.get(current_label, {}),
+                )
+
+        plotter.write_frame()
+
+    layout = find_layout(len(plotfuncs), portrait=portrait)
+
+    plotter = pv.Plotter(shape=layout, **plotter_kwargs)
+
+    plotter.open_movie(filename)
+
+    create_frame(data[0], titles[0], layout)
+
+    if linked_views:
+        plotter.link_views()
+
+    for i, single_timestep_data in enumerate(data[1::]):
+        create_frame(single_timestep_data, titles[i], layout=layout)
+
+    plotter.close()
+
+    return filename
