@@ -9,7 +9,7 @@ import sme
 
 def rgb_to_scalar(img: np.ndarray) -> np.ndarray:
     """
-    Convert an RGB image 3D image to a scalar image where each unique RGB value is assigned a unique scalar.
+    Convert an RGB 3D image represented as a 4D tensor to a 3D image tensor where each unique RGB value is assigned a unique scalar, i.e., it contracts the dimension with the RGB values into scalars. This is useful because PyVista doesn't work well with RGB values directly and expects fields defined on a grid, usually given by the tensor shape.
 
         img (np.ndarray): A 3D numpy array representing an RGB image with shape (height, width, 3).
 
@@ -34,21 +34,24 @@ def make_discrete_colormap(
     values (np.ndarray): An array of values to map to colors. Default is an empty array.
 
     Returns:
-    pv.LookupTable: A PyVista LookupTable object with the specified colormap and values.
+    pv.LookupTable: A PyVista LookupTable object with the values drawn from the specified colormap in RGBA format.
     """
-    cm = [(0, 0, 0, 1)]
-    i = 0
+    cm = []
 
-    if values == []:
-        values = np.arange(len(cm))
-    for c in cycle(plt.get_cmap(cmap).colors):
-        cm.append(mcolors.to_rgba(c))
-        if len(cm) >= len(values):
-            break
-        i += 1
-
+    if values.size == 0:
+        values = np.arange(0, 1, 1)
+        cm = [
+            mcolors.to_rgba(plt.get_cmap(cmap).colors[0]),
+        ]
+    else:
+        i = 0
+        for c in cycle(plt.get_cmap(cmap).colors):
+            cm.append(mcolors.to_rgba(c))
+            if len(cm) >= len(values):
+                break
+            i += 1
     lt = pv.LookupTable(
-        values=np.array(cm * 255),
+        values=np.array(cm) * 255,
         scalar_range=(0, len(values)),
         n_values=len(values),
     )
@@ -66,39 +69,48 @@ def find_layout(num_plots: int, portrait: bool = False) -> tuple[int, int]:
     Returns:
         tuple[int, int]: Tuple describing (n_rows, n_cols) of the grid
     """
+
+    # for checking approximation accuracy with ints. if root > root_int, then
+    # we need to adjust n_row, n_cols sucht that n_row * n_cols >= root^2
     root = np.sqrt(num_plots)
     root_int = np.rint(root)
 
-    a = int(np.floor(root))
-    b = int(np.ceil(root))
-
-    a_1 = int(a - 1)
-    b_1 = int(b + 1)
-    guesses = [
-        (x, y)
-        for x, y in [
-            (a, b),
-            (a_1, b_1),
-            (a, b_1),
-            (a_1, b),
-        ]
-        if x * y >= num_plots
-    ]
-    best_guess = guesses[np.argmin([x * y for x, y in guesses])]
-
     if np.isclose(root, root_int):
-        return int(root_int), int(root_int)
-    elif best_guess[0] * best_guess[1] >= num_plots:
+        return int(root_int), int(root_int)  # perfect square because root is an integer
+    else:
+        # approximation by integer root is inexact
+
+        #  find an approximation that is close to square such that n_row * n_cols - num_plots is
+        # as small as possible
+        a = int(np.floor(root))
+        b = int(np.ceil(root))
+
+        a_1 = int(a - 1)
+        b_1 = int(b + 1)
+
+        guesses = [
+            (x, y)
+            for x, y in [
+                (a, b),
+                (a_1, b_1),
+                (a, b_1),
+                (a_1, b),
+            ]
+            if x * y >= num_plots
+        ]
+        best_guess = guesses[
+            np.argmin([x * y for x, y in guesses])
+        ]  # smallest possible approximation
+
+        # handle orientation of the grid. min => rows for landscape, min=> cols for portrait
         return (
             (np.min(best_guess), np.max(best_guess))
             if not portrait
             else (np.max(best_guess), np.min(best_guess))
         )
-    else:
-        return b, b
 
 
-def facet_plot3D(
+def facet_grid(
     data: dict[str, np.ndarray],
     plotfuncs: dict[str, Callable],
     show_cmap: bool = False,
@@ -110,14 +122,23 @@ def facet_plot3D(
     plotfuncs_kwargs: dict[str, dict[str, Any]] = {},
 ) -> pv.Plotter:
     """
-    Create a 3D facet plot using PyVista. This function creates a grid of subplots where each subplot is filled by a function in the plotfuncs argument. The keys for plotfuncs and data must be the same, such that plotfuncs can be unambiguously mapped over the data dictionary.
-
+    Create a 3D facet plot using PyVista. This follows the seaborn.FacetGrid concept. This function creates a grid of subplots where each subplot is filled by a function in the plotfuncs argument. The keys for plotfuncs and data must be the same, such that plotfuncs can be unambiguously mapped over the data dictionary.
+    Do not attempt to plot 2D images and 3D images into the same facet grid, as this will create odd artifacts and
+    may not work as expected.
     Parameters:
     -----------
     data : dict[str, np.ndarray]
         A dictionary where keys are labels and values are numpy arrays containing the data to be plotted.
     plotfuncs : dict[str, Callable]
-        A dictionary where keys are labels and values are functions that take the label, data, plotter, and other optional arguments to create the plot.
+        A dictionary where keys are labels and values are functions with signature f(
+                label:str,
+                data:np.ndarray | pyvista.ImageData | pyvista.UniformGrid,
+                plotter:pv.Plotter,
+                panel:tuple[int, int],
+                show_cmap:bool=show_cmap,
+                cmap=cmap,
+                **plotfuncs_kwargs
+            ) -> None
     show_cmap : bool, optional
         Whether to show the color map. Default is False.
     cmap : str | np.ndarray | pv.LookupTable, optional
@@ -138,6 +159,11 @@ def facet_plot3D(
     pv.Plotter
         The PyVista Plotter object with the created facet plot.
     """
+    if data.keys() != plotfuncs.keys():
+        raise ValueError(
+            "The keys for the data and plotfuncs dictionaries must be the same."
+        )
+
     layout = find_layout(len(data), portrait=portrait)
 
     plotter = pv.Plotter(shape=layout, **plotter_kwargs)
