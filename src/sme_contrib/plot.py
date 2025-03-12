@@ -7,13 +7,11 @@ from matplotlib import animation
 from itertools import cycle
 import matplotlib.colors as mcolors
 import pyvista as pv
-from typing import Any
+from typing import Any, Callable
 import sme
 
 from .pyvista_utils import (
-    facet_animate3D,
-    facet_plot3D,
-    rgb_to_scalar,
+    find_layout,
 )
 
 
@@ -155,216 +153,173 @@ def concentration_heatmap_animation(
     return anim
 
 
-def plot_concentration_image_3D(
-    simulation_result: sme.SimulationResult,
-    show_cmap: bool = False,
-    cmap: str | np.ndarray | pv.LookupTable = "viridis",
-    plotter_kwargs: dict[str, Any] = {"border": False, "notebook": False},
-) -> pv.Plotter:
-    """Plot a single concentration image in 3D using pyvista.
-
-    Args:
-        simulation_result (sme.SimulationResult): The simulation result object of a 3D simulation for a single timestep
-        show_cmap (bool, optional): Whether the colormap should be shown or not. Defaults to False.
-        cmap (str | np.ndarray | pv.LookupTable, optional): colormap to use. Either a string naming a matplotlib colormap, a numpy array of values or a pyvista lookup table mapping values ot rgba colors.  Defaults to "viridis".
-        plotter_kwargs (dict[str, Any], optional): Addtitional kwargs for the pyvista.Plotter constructor Defaults to {"border": False, "notebook": False}.
-
-    Returns:
-        pv.Plotter: pyvista Plotter object
-    """
-
-    def plot_single(
-        title,
-        data,
-        plotter,
-        panel,
-        show_cmap=show_cmap,
-        cmap=cmap,
-    ):
-        _data = rgb_to_scalar(data)
-
-        plotter.subplot(*panel)
-
-        if title:
-            plotter.add_text(title)
-
-        img_data = pv.ImageData(
-            dimensions=_data.shape,
-        )
-        img_data.point_data["Data"] = _data.flatten()
-        img_data = img_data.points_to_cells(scalars="Data")
-        plotter.subplot(0, 0)
-        plotter.add_mesh(
-            img_data,
-            show_edges=True,
-            show_scalar_bar=show_cmap,
-            cmap=cmap,
-        )
-
-    return facet_plot3D(
-        data={"concentrations": simulation_result.concentration_image},
-        plotfuncs={"concentrations": plot_single},
-        show_cmap=show_cmap,
-        cmap=cmap,
-        portrait=True,
-        with_titles=True,
-        plotter_kwargs=plotter_kwargs,
-    )
-
-
-def plot_species_concentration_3D(
-    simulation_result: sme.SimulationResult,
-    species: list[str],
-    thresholds: list[float] = [],
+def facet_grid_3D(
+    data: dict[str, np.ndarray],
+    plotfuncs: dict[str, Callable],
     show_cmap: bool = False,
     cmap: str | np.ndarray | pv.LookupTable = "viridis",
     portrait: bool = False,
     linked_views: bool = True,
-    with_titles: bool = True,
-    plotter_kwargs: dict[str, Any] = {"border": False, "notebook": False},
+    plotter_kwargs: dict = {},
+    plotfuncs_kwargs: dict[str, dict[str, Any]] = {},
 ) -> pv.Plotter:
-    """Plot the concentration of a list of species in 3D using pyvista.
-       This function creates a 3D plot of the concentration for each species in a separate subplot
-    Args:
-        simulation_result (sme.SimulationResult): Simulationresult object for a given timestep
-        species (list[str]): list of species to plot
-        thresholds (list[float], optional): Thresholds to exclude some values for each plot. If empty, it is set to 1e6 to effectively have no threshold. Defaults to [].
-        show_cmap (bool, optional): Whether the colormap should be shown or not. Defaults to False.
-        cmap (str | np.ndarray | pv.LookupTable, optional): colormap to use. Either a string naming a matplotlib colormap, a numpy array of values or a pyvista lookup table mapping values ot rgba colors.  Defaults to "viridis".
-        portrait (bool, optional): Whether to organize plot grid (n,m) in potrait mode (smaller of (n,m) as columns) or landscape mode (smaller number as rows). Defaults to False.
-        linked_views (bool, optional): If all the views should be linked togehter such that perspective changes affect all plots the same. Defaults to True.
-        with_titles (bool, optional): Have a title for each plot or not. Defaults to True.
-        plotter_kwargs (dict[str, Any], optional): Additional kwargs for pyvista.Plotter. Defaults to {"border": False, "notebook": False}.
+    """
+    Create a 3D facet plot using PyVista. This follows the seaborn.FacetGrid concept. This function creates a grid of subplots where each subplot is filled by a function in the plotfuncs argument. The keys for plotfuncs and data must be the same, such that plotfuncs can be unambiguously mapped over the data dictionary.
+    Do not attempt to plot 2D images and 3D images into the same facet grid, as this will create odd artifacts and
+    may not work as expected.
+    Parameters:
+    -----------
+    data : dict[str, np.ndarray]
+        A dictionary where keys are labels and values are numpy arrays containing the data to be plotted.
+    plotfuncs : dict[str, Callable]
+        A dictionary where keys are labels and values are functions with signature f(
+                label:str,
+                data:np.ndarray | pyvista.ImageData | pyvista.UniformGrid,
+                plotter:pv.Plotter,
+                panel:tuple[int, int],
+                show_cmap:bool=show_cmap,
+                cmap=cmap,
+                **plotfuncs_kwargs
+            ) -> None
+    show_cmap : bool, optional
+        Whether to show the color map. Default is False.
+    cmap : str | np.ndarray | pv.LookupTable, optional
+        The color map to use. Default is "viridis".
+    portrait : bool, optional
+        Whether to use a portrait layout. Default is False.
+    linked_views : bool, optional
+        Whether to link the views of the subplots. Default is True.
+    plotter_kwargs : dict, optional
+        Additional keyword arguments to pass to the PyVista Plotter.
+    plotfuncs_kwargs : dict[str, dict[str, Any]], optional
+        Additional keyword arguments to pass to each plotting function.
 
     Returns:
-        pv.Plotter: pyvista plotter object
+    --------
+    pv.Plotter
+        The PyVista Plotter object with the created facet plot.
     """
-
-    def plot_single(
-        label: str,
-        data: np.ndarray,
-        plotter: pv.Plotter,
-        panel: tuple[int, int],
-        show_cmap,
-        cmap=cmap,
-        threshold_value=1e6,
-    ):
-        _data = rgb_to_scalar(data) if len(data.shape) == 4 else data
-
-        plotter.subplot(*panel)
-
-        if with_titles:
-            plotter.add_text(label)
-
-        img_data = pv.ImageData(
-            dimensions=_data.shape,
-        )
-        img_data.point_data["Data"] = _data.flatten()
-        img_data = img_data.points_to_cells(scalars="Data")
-        plotter.subplot(0, 0)
-        plotter.add_mesh(
-            img_data.threshold(threshold_value),
-            show_edges=True,
-            show_scalar_bar=show_cmap,
-            cmap=cmap,
+    if data.keys() != plotfuncs.keys():
+        raise ValueError(
+            "The keys for the data and plotfuncs dictionaries must be the same."
         )
 
-    return facet_plot3D(
-        data={sp: simulation_result.species_concentration[sp] for sp in species},
-        plotfuncs={sp: plot_single for sp in species},
-        show_cmap=show_cmap,
-        cmap=cmap,
-        portrait=portrait,
-        with_titles=with_titles,
-        linked_views=linked_views,
-        plotter_kwargs=plotter_kwargs,
-        plotfuncs_kwargs={
-            species[i]: {"threshold_value": thresholds[i]}
-            for i in range(0, len(species))
-        }
-        if thresholds != []
-        else {},
-    )
+    layout = find_layout(len(data), portrait=portrait)
+
+    plotter = pv.Plotter(shape=layout, **plotter_kwargs)
+
+    label = iter(plotfuncs.keys())
+
+    for i in range(layout[0]):
+        for j in range(layout[1]):
+            current_label = next(label)
+            plotfuncs[current_label](
+                current_label,
+                data[current_label],
+                plotter,
+                panel=(i, j),
+                show_cmap=show_cmap,
+                cmap=cmap,
+                **plotfuncs_kwargs.get(current_label, {}),
+            )
+
+    if linked_views:
+        plotter.link_views()
+
+    return plotter
 
 
-def concentrations_animation_3D(
+def facet_grid_animate_3D(
     filename: str,
-    simulation_results: sme.SimulationResultList,
-    species: list[str],
-    thresholds: list[float] = [],
+    data: list[dict[str, np.ndarray]],
+    plotfuncs: dict[str, Callable],
     show_cmap: bool = False,
     cmap: str | np.ndarray | pv.LookupTable = "viridis",
     portrait: bool = False,
     linked_views: bool = True,
-    with_titles: bool = True,
-    plotter_kwargs: dict = {"border": False, "notebook": False},
+    titles: list[dict[str, str]] = [],
+    plotter_kwargs: dict = {},
+    plotfuncs_kwargs: dict[str, dict[str, Any]] = {},
 ) -> str:
-    """Create an .mp4 video of the concentration of a list of species in 3D using pyvista, with one frame being one timestep for each species. In essence, this is an animated version of the plot_species_concentration_3D function.
-
-    Args:
-        filename (str): filename to save the video
-        simulation_results (sme.SimulationResultList): List of simulation results for each timestep
-        species (list[str]): List of species to animate
-        thresholds (list[float], optional): Thresholds to limit the plotted values for each species Values larger than the threshold will be cut. Defaults to [].
-        show_cmap (bool, optional): Whether the colormap should be shown or not. Defaults to False.
-        cmap (str | np.ndarray | pv.LookupTable, optional): colormap to use. Either a string naming a matplotlib colormap, a numpy array of values or a pyvista lookup table mapping values ot rgba colors.  Defaults to "viridis".
-        portrait (bool, optional): Whether to organize plot grid (n,m) in potrait mode (smaller of (n,m) as columns) or landscape mode (smaller number as rows). Defaults to False.
-        linked_views (bool, optional): If all the views should be linked togehter such that perspective changes affect all plots the same. Defaults to True.
-        with_titles (bool, optional): Have a title for each plot or not. Defaults to True.
-        plotter_kwargs (dict[str, Any], optional): Additional kwargs for pyvista.Plotter. Defaults to {"border": False, "notebook": False}.
-
+    """
+    Create a 3D animation from a series of data snapshots using PyVista.
+    This series must be a list of dictionaries with the data for each frame keyed by a label used to title the panel it will be plotted into. The final plot will have as many subplots as there are labels in the data dictionaries. The keys for plotfuncs and data must be the same.
+    Parameters:
+    -----------
+    filename : str
+        The name of the output movie file.
+    data : list[dict[str, np.ndarray]]
+        A list of dictionaries containing the data for each timestep.
+    plotfuncs : dict[str, Callable]
+        A dictionary of plotting functions keyed by data label. The keys for plotfuncs and data must be the same.
+    show_cmap : bool, optional
+        Whether to show the color map (default is False).
+    cmap : str | np.ndarray | pv.LookupTable, optional
+        The colormap to use (default is "viridis").
+    portrait : bool, optional
+        Whether to use portrait layout (default is False).
+    linked_views : bool, optional
+        Whether to link the views of the subplots (default is True).
+    titles : list[dict[str, str]], optional
+        A list of dictionaries containing titles for each subplot (default is an empty list).
+    plotter_kwargs : dict, optional
+        Additional keyword arguments to pass to the PyVista Plotter (default is an empty dictionary).
+    plotfuncs_kwargs : dict[str, dict[str, Any]], optional
+        Additional keyword arguments to pass to each plotting function (default is an empty dictionary).
     Returns:
-        str: filename of the saved video
+    --------
+    str
+        The filename of the created movie.
     """
 
-    def plot_single(
-        label: str,
-        data: np.ndarray,
-        plotter: pv.Plotter,
-        panel: tuple[int, int],
-        show_cmap,
-        cmap=cmap,
-        threshold_value=1e6,
+    if len(titles) > 0 and len(titles) != len(data):
+        raise ValueError(
+            "The number of titles must be the same as the number of data dictionaries."
+        )
+
+    if data[0].keys() != plotfuncs.keys():
+        raise ValueError(
+            "The keys for the data and plotfuncs dictionaries must be the same."
+        )
+
+    # main function, called for each frame in the movie
+    def create_frame(
+        data_dict: dict[str, np.ndarray], title: dict[str:str], layout=(1, 1)
     ):
-        _data = rgb_to_scalar(data) if len(data.shape) == 4 else data
+        label = iter(data_dict.keys())
+        for i in range(layout[0]):
+            for j in range(layout[1]):
+                current_label = next(label)
+                plotfuncs[current_label](
+                    title.get(current_label, current_label),
+                    data_dict[current_label],
+                    plotter,
+                    panel=(i, j),
+                    show_cmap=show_cmap,
+                    cmap=cmap,
+                    **plotfuncs_kwargs.get(current_label, {}),
+                )
 
-        img_data = pv.ImageData(
-            dimensions=_data.shape,
+        plotter.write_frame()
+
+    # preparations
+    layout = find_layout(len(plotfuncs), portrait=portrait)
+
+    plotter = pv.Plotter(shape=layout, **plotter_kwargs)
+
+    plotter.open_movie(filename)
+
+    # add first frame here to set up the plotter
+    create_frame(data[0], titles[0] if len(titles) > 0 else {}, layout)
+
+    if linked_views:
+        plotter.link_views()
+
+    for i, single_timestep_data in enumerate(data[1::]):
+        create_frame(
+            single_timestep_data, titles[i] if len(titles) > 0 else {}, layout=layout
         )
-        img_data.point_data["Data"] = _data.flatten()
-        img_data = img_data.points_to_cells(scalars="Data")
 
-        plotter.subplot(*panel)
-        if with_titles:
-            plotter.add_text(label, name=label + str(panel))
+    plotter.close()
 
-        actor = plotter.add_mesh(
-            img_data.threshold(threshold_value),
-            show_edges=True,
-            show_scalar_bar=show_cmap,
-            cmap=cmap,
-            name="mesh" + label + str(panel),
-        )
-        actor.mapper.scalar_range = (np.min(_data), np.max(_data))
-
-    return facet_animate3D(
-        filename=filename,
-        data=[s.species_concentration for s in simulation_results],
-        titles=[
-            {sp: f"Concentration of {sp} at t={s.time_point}" for sp in species}
-            for s in simulation_results
-        ],
-        plotfuncs={sp: plot_single for sp in species},
-        show_cmap=show_cmap,
-        cmap=cmap,
-        portrait=portrait,
-        linked_views=linked_views,
-        with_titles=with_titles,
-        plotter_kwargs=plotter_kwargs,
-        plotfuncs_kwargs={
-            species[i]: {"threshold_value": thresholds[i]}
-            for i in range(0, len(species))
-        }
-        if len(thresholds) > 0
-        else {},
-    )
+    return filename
