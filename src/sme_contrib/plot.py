@@ -135,8 +135,8 @@ def facet_grid_3D(
     cmap: Union[str, np.ndarray, pv.LookupTable] = "viridis",
     portrait: bool = False,
     linked_views: bool = True,
-    plotter_kwargs: dict = {},
-    plotfuncs_kwargs: dict[str, dict[str, Any]] = {},
+    plotter_kwargs: Union[dict, None] = None,
+    plotfuncs_kwargs: Union[dict[str, dict[str, Any]], None] = None,
 ) -> pv.Plotter:
     """
     Create a 3D facet plot using PyVista.
@@ -163,7 +163,9 @@ def facet_grid_3D(
 
     layout = find_layout(len(data), portrait=portrait)
 
-    plotter = pv.Plotter(shape=layout, **plotter_kwargs)
+    plotter = pv.Plotter(
+        shape=layout, **(plotter_kwargs if plotter_kwargs is not None else {})
+    )
 
     label = iter(plotfuncs.keys())
 
@@ -177,7 +179,11 @@ def facet_grid_3D(
                 panel=(i, j),
                 show_cmap=show_cmap,
                 cmap=cmap,
-                **plotfuncs_kwargs.get(current_label, {}),
+                **(
+                    plotfuncs_kwargs.get(current_label, {})
+                    if plotfuncs_kwargs is not None
+                    else {}
+                ),
             )
 
     if linked_views:
@@ -194,9 +200,9 @@ def facet_grid_animate_3D(
     cmap: Union[str, np.ndarray, pv.LookupTable] = "viridis",
     portrait: bool = False,
     linked_views: bool = True,
-    titles: list[dict[str, str]] = [],
-    plotter_kwargs: dict = {},
-    plotfuncs_kwargs: dict[str, dict[str, Any]] = {},
+    titles: Union[list[dict[str, str]], None] = None,
+    plotter_kwargs: Union[dict, None] = None,
+    plotfuncs_kwargs: Union[dict[str, dict[str, Any]], None] = None,
 ) -> str:
     """
     Create a 3D animation from a series of data snapshots using PyVista.
@@ -218,6 +224,8 @@ def facet_grid_animate_3D(
     Returns:
         str The filename of the created movie.
     """
+    if titles is None:
+        titles = []
 
     if len(titles) > 0 and len(titles) != len(data):
         raise ValueError(
@@ -244,7 +252,9 @@ def facet_grid_animate_3D(
                     panel=(i, j),
                     show_cmap=show_cmap,
                     cmap=cmap,
-                    **plotfuncs_kwargs.get(current_label, {}),
+                    **plotfuncs_kwargs.get(current_label, {})
+                    if plotfuncs_kwargs is not None
+                    else {},
                 )
 
         plotter.write_frame()
