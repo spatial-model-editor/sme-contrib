@@ -117,7 +117,6 @@ def facet_grid(
     cmap: str | np.ndarray | pv.LookupTable = "viridis",
     portrait: bool = False,
     linked_views: bool = True,
-    with_titles: bool = True,
     plotter_kwargs: dict = {},
     plotfuncs_kwargs: dict[str, dict[str, Any]] = {},
 ) -> pv.Plotter:
@@ -147,8 +146,6 @@ def facet_grid(
         Whether to use a portrait layout. Default is False.
     linked_views : bool, optional
         Whether to link the views of the subplots. Default is True.
-    with_titles : bool, optional
-        Whether to include titles in the subplots. Default is True.
     plotter_kwargs : dict, optional
         Additional keyword arguments to pass to the PyVista Plotter.
     plotfuncs_kwargs : dict[str, dict[str, Any]], optional
@@ -189,7 +186,7 @@ def facet_grid(
     return plotter
 
 
-def facet_animate3D(
+def facet_grid_animate(
     filename: str,
     data: list[dict[str, np.ndarray]],
     plotfuncs: dict[str, Callable],
@@ -198,7 +195,6 @@ def facet_animate3D(
     portrait: bool = False,
     linked_views: bool = True,
     titles: list[dict[str, str]] = [],
-    with_titles: bool = True,
     plotter_kwargs: dict = {},
     plotfuncs_kwargs: dict[str, dict[str, Any]] = {},
 ) -> str:
@@ -223,8 +219,6 @@ def facet_animate3D(
         Whether to link the views of the subplots (default is True).
     titles : list[dict[str, str]], optional
         A list of dictionaries containing titles for each subplot (default is an empty list).
-    with_titles : bool, optional
-        Whether to include titles in the plots (default is True).
     plotter_kwargs : dict, optional
         Additional keyword arguments to pass to the PyVista Plotter (default is an empty dictionary).
     plotfuncs_kwargs : dict[str, dict[str, Any]], optional
@@ -234,6 +228,16 @@ def facet_animate3D(
     str
         The filename of the created movie.
     """
+
+    if len(titles) > 0 and len(titles) != len(data):
+        raise ValueError(
+            "The number of titles must be the same as the number of data dictionaries."
+        )
+
+    if data[0].keys() != plotfuncs.keys():
+        raise ValueError(
+            "The keys for the data and plotfuncs dictionaries must be the same."
+        )
 
     def create_frame(
         data_dict: dict[str, np.ndarray], title: dict[str:str], layout=(1, 1)
@@ -259,14 +263,15 @@ def facet_animate3D(
     plotter = pv.Plotter(shape=layout, **plotter_kwargs)
 
     plotter.open_movie(filename)
-
-    create_frame(data[0], titles[0], layout)
+    create_frame(data[0], titles[0] if len(titles) > 0 else {}, layout)
 
     if linked_views:
         plotter.link_views()
 
     for i, single_timestep_data in enumerate(data[1::]):
-        create_frame(single_timestep_data, titles[i], layout=layout)
+        create_frame(
+            single_timestep_data, titles[i] if len(titles) > 0 else {}, layout=layout
+        )
 
     plotter.close()
 

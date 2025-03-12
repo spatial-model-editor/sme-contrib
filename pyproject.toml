@@ -26,7 +26,7 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 
 ]
-dependencies = ["matplotlib", "numpy", "pillow", "pyswarms", "sme>=1.4.0","pyvista[all]"]
+dependencies = ["matplotlib", "numpy", "pillow", "pyswarms", "sme>=1.4.0","pyvista[all]", "imageio[ffmpeg]"]
 
 dynamic = ["version"]
 
@@ -44,7 +44,7 @@ docs = [
   "nbsphinx",
   "pandoc",
   "sphinx>=4.5.0",
-  "sphinx_rtd_theme>=1.0.0"
+  "sphinx_rtd_theme>=1.0.0",
 ]
 
 [tool.setuptools.dynamic]

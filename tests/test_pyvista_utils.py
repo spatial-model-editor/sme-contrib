@@ -113,3 +113,79 @@ def test_facet_grid_3D(exampledata):
                 "wrong_key": plot_brain,
             },
         )
+
+
+def test_facet_grid_animation(tmp_path, exampledata):
+    def plot_bloodvessel(label, data, plotter, panel, **kwargs):
+        plotter.subplot(*panel)
+        plotter.add_mesh(data)
+
+    def plot_brain(label, data, plotter, panel, **kwargs):
+        plotter.subplot(*panel)
+        plotter.add_volume(
+            data,
+            cmap="viridis",
+            opacity="sigmoid",  # Common opacity mapping for volume rendering
+            shade=True,
+            ambient=0.3,
+            diffuse=0.6,
+            specular=0.5,
+        )
+
+    def plot_armadillo(label, data, plotter, panel, **kwargs):
+        plotter.subplot(*panel)
+        plotter.add_mesh(data)
+
+    data_for_frames = [
+        {
+            "armadillo": exampledata["armadillo"],
+            "bloodvessel": exampledata["bloodvessel"],
+            "brain": exampledata["brain"],
+        },
+        {
+            "armadillo": exampledata["armadillo"],
+            "bloodvessel": exampledata["bloodvessel"],
+            "brain": exampledata["brain"],
+        },
+        {
+            "armadillo": exampledata["armadillo"],
+            "bloodvessel": exampledata["bloodvessel"],
+            "brain": exampledata["brain"],
+        },
+    ]
+
+    testanimation = pvu.facet_grid_animate(
+        tmp_path / "test.mp4",
+        data=data_for_frames,
+        plotfuncs={
+            "armadillo": plot_armadillo,
+            "bloodvessel": plot_bloodvessel,
+            "brain": plot_brain,
+        },
+    )
+
+    assert testanimation == tmp_path / "test.mp4"
+    assert testanimation.exists()
+
+    with pytest.raises(ValueError):
+        pvu.facet_grid_animate(
+            tmp_path / "test.mp4",
+            data=data_for_frames,
+            plotfuncs={
+                "armadillo": plot_armadillo,
+                "bloodvessel": plot_bloodvessel,
+                "wrong_key": plot_brain,
+            },
+        )
+
+    with pytest.raises(ValueError):
+        pvu.facet_grid_animate(
+            tmp_path / "test.mp4",
+            data=data_for_frames,
+            plotfuncs={
+                "armadillo": plot_armadillo,
+                "bloodvessel": plot_bloodvessel,
+                "brain": plot_brain,
+            },
+            titles=["title1", "title2"],
+        )
