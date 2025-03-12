@@ -4,11 +4,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap as lscmap
 from matplotlib import animation
-from itertools import cycle
-import matplotlib.colors as mcolors
 import pyvista as pv
 from typing import Any, Callable
-import sme
 
 from .pyvista_utils import (
     find_layout,
@@ -35,28 +32,6 @@ def colormap(color, name="my colormap"):
         matplotlib.Colormap: the Colormap
     """
     return lscmap.from_list(name, [(0, 0, 0), color], 256)
-
-
-def make_circular_colormap(
-    cmap: str = "tab10", values: np.ndarray = np.array([])
-) -> list[tuple]:
-    """Create a discrete colormap of potentially repeating colors of the same size as the `values` array.
-
-    Args:
-        cmap (str, optional): matplotlib colormap name. Defaults to "tab10".
-        values (np.array, optional): values to be mapped to colors. Defaults to [].
-
-    Returns:
-        list[tuple]: list of color in rgba format.
-    """
-    cm = [(0.0, 0.0, 0.0, 1.0)]
-    i = 0
-    for c in cycle(plt.get_cmap(cmap).colors):
-        cm.append(mcolors.to_rgba(c))
-        if len(cm) >= len(values):
-            break
-        i += 1
-    return cm
 
 
 def concentration_heatmap(
