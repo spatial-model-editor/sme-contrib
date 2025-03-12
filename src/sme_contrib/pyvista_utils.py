@@ -14,7 +14,7 @@ def rgb_to_scalar(img: np.ndarray) -> np.ndarray:
         np.ndarray: A 2D numpy array with the same height and width as the input image, where each pixel's value
                     corresponds to a unique scalar representing the original RGB value.
     """
-    reshaped = img.reshape(-1, 3, copy=True)
+    reshaped = np.copy(img.reshape(-1, 3))
     unique_rgb, ridx = np.unique(reshaped, axis=0, return_inverse=True)
 
     values = np.arange(len(unique_rgb))

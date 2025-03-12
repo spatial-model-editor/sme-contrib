@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap as lscmap
 from matplotlib import animation
 import pyvista as pv
-from typing import Any, Callable
+from typing import Any, Callable, Union
 
 from .pyvista_utils import (
     find_layout,
@@ -132,7 +132,7 @@ def facet_grid_3D(
     data: dict[str, np.ndarray],
     plotfuncs: dict[str, Callable],
     show_cmap: bool = False,
-    cmap: str | np.ndarray | pv.LookupTable = "viridis",
+    cmap: Union[str, np.ndarray, pv.LookupTable] = "viridis",
     portrait: bool = False,
     linked_views: bool = True,
     plotter_kwargs: dict = {},
@@ -209,7 +209,7 @@ def facet_grid_animate_3D(
     data: list[dict[str, np.ndarray]],
     plotfuncs: dict[str, Callable],
     show_cmap: bool = False,
-    cmap: str | np.ndarray | pv.LookupTable = "viridis",
+    cmap: Union[str, np.ndarray, pv.LookupTable] = "viridis",
     portrait: bool = False,
     linked_views: bool = True,
     titles: list[dict[str, str]] = [],
