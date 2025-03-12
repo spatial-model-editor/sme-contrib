@@ -262,7 +262,9 @@ def facet_grid_animate_3D(
     # preparations
     layout = find_layout(len(plotfuncs), portrait=portrait)
 
-    plotter = pv.Plotter(shape=layout, **plotter_kwargs)
+    plotter = pv.Plotter(
+        shape=layout, **plotter_kwargs if plotter_kwargs is not None else {}
+    )
 
     plotter.open_movie(filename)
 
