@@ -9,10 +9,11 @@ def rgb_to_scalar(img: np.ndarray) -> np.ndarray:
     """
     Convert an RGB 3D image represented as a 4D tensor to a 3D image tensor where each unique RGB value is assigned a unique scalar, i.e., it contracts the dimension with the RGB values into scalars in such a way that 2 different colors are mapped to 2 different scalars, too. This is needed because PyVista doesn't work with RGB values directly and expects fields defined on a grid.
 
-        img (np.ndarray): A 3D numpy array representing an RGB image with shape (height, width, 3).
+    Args:
+    img (np.ndarray): A 3D numpy array representing an RGB image with shape (height, width, 3).
 
-        np.ndarray: A 2D numpy array with the same height and width as the input image, where each pixel's value
-                    corresponds to a unique scalar representing the original RGB value.
+    Retruns:
+    np.ndarray: A 2D numpy array with the same height and width as the input image, where each pixel's value corresponds to a unique scalar representing the original RGB value.
     """
     reshaped = np.copy(img.reshape(-1, 3))
     unique_rgb, ridx = np.unique(reshaped, axis=0, return_inverse=True)
@@ -61,11 +62,11 @@ def find_layout(num_plots: int, portrait: bool = False) -> tuple[int, int]:
     """Find a reasonable layout for a grid of subplots. This splits num_subplots into n x m subplots where n and m are as close as possible to each other. This can include a case where n x m > num_plots. Then, the superficial panels in the grid are ignored in the plotting process.
 
     Args:
-        num_plots (int): Number of plots to arrange
+    num_plots (int): Number of plots to arrange
         portrait (bool, optional): Whether the min or max of (n,m) should be the column number in the resulting grid. Defaults to False.
 
     Returns:
-        tuple[int, int]: Tuple describing (n_rows, n_cols) of the grid
+    tuple[int, int]: Tuple describing (n_rows, n_cols) of the grid
     """
 
     # for checking approximation accuracy with ints. if root > root_int, then
