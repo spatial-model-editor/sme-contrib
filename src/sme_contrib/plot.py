@@ -139,40 +139,22 @@ def facet_grid_3D(
     plotfuncs_kwargs: dict[str, dict[str, Any]] = {},
 ) -> pv.Plotter:
     """
-    Create a 3D facet plot using PyVista. This follows the seaborn.FacetGrid concept. This function creates a grid of subplots where each subplot is filled by a function in the plotfuncs argument. The keys for plotfuncs and data must be the same, such that plotfuncs can be unambiguously mapped over the data dictionary.
-    Do not attempt to plot 2D images and 3D images into the same facet grid, as this will create odd artifacts and
-    may not work as expected.
-    Parameters:
-    -----------
-    data : dict[str, np.ndarray]
-        A dictionary where keys are labels and values are numpy arrays containing the data to be plotted.
-    plotfuncs : dict[str, Callable]
-        A dictionary where keys are labels and values are functions with signature f(
-                label:str,
-                data:np.ndarray | pyvista.ImageData | pyvista.UniformGrid,
-                plotter:pv.Plotter,
-                panel:tuple[int, int],
-                show_cmap:bool=show_cmap,
-                cmap=cmap,
-                **plotfuncs_kwargs
-            ) -> None
-    show_cmap : bool, optional
-        Whether to show the color map. Default is False.
-    cmap : str | np.ndarray | pv.LookupTable, optional
-        The color map to use. Default is "viridis".
-    portrait : bool, optional
-        Whether to use a portrait layout. Default is False.
-    linked_views : bool, optional
-        Whether to link the views of the subplots. Default is True.
-    plotter_kwargs : dict, optional
-        Additional keyword arguments to pass to the PyVista Plotter.
-    plotfuncs_kwargs : dict[str, dict[str, Any]], optional
-        Additional keyword arguments to pass to each plotting function.
+    Create a 3D facet plot using PyVista.
+
+    This follows the seaborn.FacetGrid concept. This function creates a grid of subplots where each subplot is filled by a function in the plotfuncs argument. The keys for plotfuncs and data must be the same, such that plotfuncs can be unambiguously mapped over the data dictionary. Do not attempt to plot 2D images and 3D images into the same facet grid, as this will create odd artifacts and may not work as expected.
+
+    Args:
+        data : dict[str, np.ndarray] A dictionary where keys are labels and values are numpy arrays containing the data to be plotted.
+        plotfuncs : dict[str, Callable] A dictionary where keys are labels and values are functions with signature f(label:str, data:np.ndarray | pyvista.ImageData | pyvista.UniformGrid, plotter:pv.Plotter, panel:tuple[int, int], show_cmap:bool=show_cmap, cmap=cmap, **plotfuncs_kwargs ) -> None
+        show_cmap : bool, optional Whether to show the color map. Default is False.
+        cmap : str | np.ndarray | pv.LookupTable, optional The color map to use. Default is "viridis".
+        portrait : bool, optional Whether to use a portrait layout. Default is False.
+        linked_views : bool, optional Whether to link the views of the subplots. Default is True.
+        plotter_kwargs : dict, optional Additional keyword arguments to pass to the PyVista Plotter.
+        plotfuncs_kwargs : dict[str, dict[str, Any]], optional Additional keyword arguments to pass to each plotting function.
 
     Returns:
-    --------
-    pv.Plotter
-        The PyVista Plotter object with the created facet plot.
+        pv.Plotter The PyVista Plotter object with the created facet plot.
     """
     if data.keys() != plotfuncs.keys():
         raise ValueError(
@@ -218,33 +200,23 @@ def facet_grid_animate_3D(
 ) -> str:
     """
     Create a 3D animation from a series of data snapshots using PyVista.
+
     This series must be a list of dictionaries with the data for each frame keyed by a label used to title the panel it will be plotted into. The final plot will have as many subplots as there are labels in the data dictionaries. The keys for plotfuncs and data must be the same.
-    Parameters:
-    -----------
-    filename : str
-        The name of the output movie file.
-    data : list[dict[str, np.ndarray]]
-        A list of dictionaries containing the data for each timestep.
-    plotfuncs : dict[str, Callable]
-        A dictionary of plotting functions keyed by data label. The keys for plotfuncs and data must be the same.
-    show_cmap : bool, optional
-        Whether to show the color map (default is False).
-    cmap : str | np.ndarray | pv.LookupTable, optional
-        The colormap to use (default is "viridis").
-    portrait : bool, optional
-        Whether to use portrait layout (default is False).
-    linked_views : bool, optional
-        Whether to link the views of the subplots (default is True).
-    titles : list[dict[str, str]], optional
-        A list of dictionaries containing titles for each subplot (default is an empty list).
-    plotter_kwargs : dict, optional
-        Additional keyword arguments to pass to the PyVista Plotter (default is an empty dictionary).
-    plotfuncs_kwargs : dict[str, dict[str, Any]], optional
-        Additional keyword arguments to pass to each plotting function (default is an empty dictionary).
+
+    Args:
+        filename : str The name of the output movie file.
+        data : list[dict[str, np.ndarray]] A list of dictionaries containing the data for each timestep.
+        plotfuncs : dict[str, Callable] A dictionary of plotting functions keyed by data label. The keys for plotfuncs and data must be the same.
+        show_cmap : bool, optional Whether to show the color map (default is False).
+        cmap : str | np.ndarray | pv.LookupTable, optional The colormap to use (default is "viridis").
+        portrait : bool, optional Whether to use portrait layout (default is False).
+        linked_views : bool, optional Whether to link the views of the subplots (default is True).
+        titles : list[dict[str, str]], optional A list of dictionaries containing titles for each subplot (default is an empty list).
+        plotter_kwargs : dict, optional Additional keyword arguments to pass to the PyVista Plotter (default is an empty dictionary).
+        plotfuncs_kwargs : dict[str, dict[str, Any]], optional Additional keyword arguments to pass to each plotting function (default is an empty dictionary).
+
     Returns:
-    --------
-    str
-        The filename of the created movie.
+        str The filename of the created movie.
     """
 
     if len(titles) > 0 and len(titles) != len(data):

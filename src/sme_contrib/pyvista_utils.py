@@ -25,7 +25,7 @@ def make_discrete_colormap(
     cmap: str = "tab10", values: np.ndarray = np.array([])
 ) -> pv.LookupTable:
     """
-    Create a discrete colormap for use with PyVista with as many colors as unique values in the `values`array based on a given matplotlbit colormap. The colors will possibly repeat if there are more unique values than colors in the colormap. In this case, the outcome is intended, e.g., for separability of regions in the visualization,
+    Create a discrete colormap for use with PyVista with as many colors as unique values in the ``values``array based on a given matplotlbit colormap. The colors will possibly repeat if there are more unique values than colors in the colormap. In this case, the outcome is intended, e.g., for separability of regions in the visualization,
 
     Parameters:
     cmap (str): The name of the colormap to use. Default is 'tab10'.
