@@ -292,7 +292,7 @@ def concentrations3D(
     species: list[str],
     cmap: Union[str, np.ndarray, pv.LookupTable] = "viridis",
     show_cmap: bool = False,
-    plotter_kwargs: Union[None,dict[str, Any]] = None,
+    plotter_kwargs: Union[None, dict[str, Any]] = None,
     plotfunc_kwargs: Union[None, dict[str, Any]] = None,
 ) -> pv.Plotter:
     """Plot a 3D facet grid of species concentrations.
@@ -344,7 +344,7 @@ def concentrations3D(
             label=label,
             cmap=cmap,
             show_scalar_bar=show_cmap,
-            clim = (
+            clim=(
                 np.min(data),
                 np.max(data),
             ),
@@ -374,7 +374,7 @@ def concentrationsAnimate3D(
     titles: Union[list[dict[str, str]], None] = None,
     linked_views: bool = True,
     plotter_kwargs: Union[None, dict[str, Any]] = None,
-    plotfunc_kwargs:  Union[None, dict[str, Any]] = None,
+    plotfunc_kwargs: Union[None, dict[str, Any]] = None,
 ) -> Union[str, Path]:
     """Animate a list of frames from a simulation result list.
     This function creates a 3D animation of the species concentrations over time. Each frame will be a 3D plot of the concentration of a single species.
@@ -416,20 +416,22 @@ def concentrationsAnimate3D(
             cmap=cmap,
             show_scalar_bar=show_cmap,
             **kwargs,
-    )
-        
+        )
 
     return facet_grid_animate_3D(
-    filename,
-    data=[
-        {species[i]: res.species_concentration[species[i]] for i in range(len(species))}
-        for res in simulation_results
-    ],
-    plotfuncs={species[i]: plotfunc for i in range(len(species))},
-    cmap=cmap,
-    show_cmap=show_cmap,
-    portrait=portrait,
-    linked_views=linked_views,
+        filename,
+        data=[
+            {
+                species[i]: res.species_concentration[species[i]]
+                for i in range(len(species))
+            }
+            for res in simulation_results
+        ],
+        plotfuncs={species[i]: plotfunc for i in range(len(species))},
+        cmap=cmap,
+        show_cmap=show_cmap,
+        portrait=portrait,
+        linked_views=linked_views,
         titles=titles,
         plotter_kwargs=plotter_kwargs,
         plotfuncs_kwargs=plotfunc_kwargs,
