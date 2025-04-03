@@ -196,7 +196,7 @@ def facet_grid_3D(
 
 
 def facet_grid_animate_3D(
-    filename: Unioin[str, Path],
+    filename: Union[str, Path],
     data: list[dict[str, np.ndarray]],
     plotfuncs: dict[str, Callable],
     show_cmap: bool = False,
@@ -378,7 +378,7 @@ def concentrationsAnimate3D(
     The animation will be saved to the specified filename.
 
     Args:
-        filename (Unioin[str, Path]): filename to save the animation to. Uses mp4 format.
+        filename (Union[str, Path]): filename to save the animation to. Uses mp4 format.
         simulation_results (sme.SimulationResultList): a list of `SimulationResult` objects, i.e., a list of recorded frames of the simulations
         species (list[str]): list of species to plot
         show_cmap (bool, optional): Whether to show the colorbar on theplots or not. Defaults to False.
@@ -390,7 +390,7 @@ def concentrationsAnimate3D(
         plotfunc_kwargs (dict[str, Any], optional): Additional keyword arguments passed to plotter.add_mesh. Defaults to None. See [here](https://docs.pyvista.org/api/plotting/_autosummary/pyvista.plotter.add_mesh#) for more information.
 
     Returns:
-        Unioin[str, Path]: path to the saved animation .mp4 file
+        Union[str, Path]: path to the saved animation .mp4 file
     """
 
     def plotfunc(
