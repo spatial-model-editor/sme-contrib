@@ -196,7 +196,7 @@ def facet_grid_3D(
 
 
 def facet_grid_animate_3D(
-    filename: str | Path,
+    filename: Unioin[str, Path],
     data: list[dict[str, np.ndarray]],
     plotfuncs: dict[str, Callable],
     show_cmap: bool = False,
@@ -361,7 +361,7 @@ def concentrations3D(
 
 
 def concentrationsAnimate3D(
-    filename: str | Path,
+    filename: Union[str, Path],
     simulation_results: sme.SimulationResultList,
     species: list[str],
     show_cmap: bool = False,
@@ -371,14 +371,14 @@ def concentrationsAnimate3D(
     linked_views: bool = True,
     plotter_kwargs: dict[str, Any] = None,
     plotfunc_kwargs: dict[str, Any] = None,
-) -> str | Path:
+) -> Union[str, Path]:
     """Animate a list of frames from a simulation result list.
     This function creates a 3D animation of the species concentrations over time. Each frame will be a 3D plot of the concentration of a single species.
     This function is a wrapper around the facet_grid_animate_3D function.
     The animation will be saved to the specified filename.
 
     Args:
-        filename (str | Path): filename to save the animation to. Uses mp4 format.
+        filename (Unioin[str, Path]): filename to save the animation to. Uses mp4 format.
         simulation_results (sme.SimulationResultList): a list of `SimulationResult` objects, i.e., a list of recorded frames of the simulations
         species (list[str]): list of species to plot
         show_cmap (bool, optional): Whether to show the colorbar on theplots or not. Defaults to False.
@@ -390,7 +390,7 @@ def concentrationsAnimate3D(
         plotfunc_kwargs (dict[str, Any], optional): Additional keyword arguments passed to plotter.add_mesh. Defaults to None. See [here](https://docs.pyvista.org/api/plotting/_autosummary/pyvista.plotter.add_mesh#) for more information.
 
     Returns:
-        str | Path: path to the saved animation .mp4 file
+        Unioin[str, Path]: path to the saved animation .mp4 file
     """
 
     def plotfunc(
