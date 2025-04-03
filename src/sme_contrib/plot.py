@@ -6,9 +6,12 @@ from matplotlib.colors import LinearSegmentedColormap as lscmap
 from matplotlib import animation
 import pyvista as pv
 from typing import Any, Callable, Union
+import sme
+from pathlib import Path
 
 from .pyvista_utils import (
     find_layout,
+    make_discrete_colormap,
 )
 
 
@@ -193,7 +196,7 @@ def facet_grid_3D(
 
 
 def facet_grid_animate_3D(
-    filename: str,
+    filename: str | Path,
     data: list[dict[str, np.ndarray]],
     plotfuncs: dict[str, Callable],
     show_cmap: bool = False,
@@ -282,3 +285,160 @@ def facet_grid_animate_3D(
     plotter.close()
 
     return filename
+
+
+def concentrations3D(
+    simulation_result: sme.SimulationResult,
+    species: list[str],
+    cmap: str | np.ndarray | pv.LookupTable = "viridis",
+    show_cmap: bool = False,
+    plotter_kwargs: dict[str, Any] = None,
+    plotfunc_kwargs: dict[str, Any] = None,
+) -> pv.Plotter:
+    """Plot a 3D facet grid of species concentrations.
+    This function creates a 3D facet grid of species concentrations. Each panel will be a 3D plot of the concentration of a single species.
+    This function is a wrapper around the facet_grid_3D function.
+
+    Args:
+        simulation_result (sme.SimulationResult): a single simulation result object, i.e., a single recorded frame of the simulations
+        species (list[str]): A list of species strings
+        cmap (str | np.ndarray | pv.LookupTable, optional): Name of a matplotlib colorbar. Defaults to "viridis".
+        show_cmap (bool, optional): Whether or not to show the colorbar on the plot. Defaults to False.
+        plotter_kwargs (dict[str, Any], optional): Additional keyword arguments for the used pyVista.Plotter. Defaults to None.
+        plotfunc_kwargs (dict[str, Any], optional): Additional keyword arguments passed to plotter.add_mesh. Defaults to None.
+    Raises:
+        ValueError: if the data is not 3D
+        ValueError: if a given species is not found in the simulation result
+
+    Returns:
+        pv.Plotter: pyvista.Plotter object the data has been plotted into
+    """
+    # turn the simulation result into numpy ndarray
+    datadict = {}
+    maximum_species = 0
+    maximum = 0
+    for s in species:
+        if s not in simulation_result.species_concentration:
+            raise ValueError(f"Species {s} not found in simulation result.")
+        data = simulation_result.species_concentration[s]
+        if data.ndim != 3:
+            raise ValueError("Data must be 3D.")
+        else:
+            if np.max(data) > maximum:
+                maximum_species = s
+                maximum = np.max(data)
+        datadict[s] = data
+
+    # create a colormap
+    cmap = make_discrete_colormap(cmap, datadict[maximum_species])
+
+    # create a plot function
+    def plotfunc(
+        label: str,
+        data: np.ndarray,
+        plotter: pv.Plotter,
+        panel: tuple[int, int],
+        show_cmap: bool,
+        cmap: Union[str, np.ndarray, pv.LookupTable],
+        **kwargs: dict[str, Any],
+    ):
+        print(f"Plotting {label} in panel {panel}")
+        # create a pyvista grid
+
+        plotter.subplot(*panel)
+        plotter.title = label
+        plotter.add_mesh(
+            data,
+            scalars=data,
+            label=label,
+            cmap=cmap,
+            show_scalar_bar=show_cmap,
+            **kwargs,
+        )
+
+    # use facetGrid3D to plot it
+    return facet_grid_3D(
+        data=datadict,
+        plotfuncs={species[i]: plotfunc for i in range(len(species))},
+        show_cmap=show_cmap,
+        cmap=cmap,
+        portrait=False,
+        linked_views=True,
+        plotter_kwargs=plotter_kwargs,
+        plotfuncs_kwargs=plotfunc_kwargs,
+    )
+
+
+def concentrationsAnimate3D(
+    filename: str | Path,
+    simulation_results: sme.SimulationResultList,
+    species: list[str],
+    show_cmap: bool = False,
+    cmap: Union[str, np.ndarray, pv.LookupTable] = "viridis",
+    portrait: bool = False,
+    titles: Union[list[dict[str, str]], None] = None,
+    linked_views: bool = True,
+    plotter_kwargs: dict[str, Any] = None,
+    plotfunc_kwargs: dict[str, Any] = None,
+) -> str | Path:
+    """Animate a list of frames from a simulation result list.
+    This function creates a 3D animation of the species concentrations over time. Each frame will be a 3D plot of the concentration of a single species.
+    This function is a wrapper around the facet_grid_animate_3D function.
+    The animation will be saved to the specified filename.
+
+    Args:
+        filename (str | Path): filename to save the animation to. Uses mp4 format.
+        simulation_results (sme.SimulationResultList): a list of `SimulationResult` objects, i.e., a list of recorded frames of the simulations
+        species (list[str]): list of species to plot
+        show_cmap (bool, optional): Whether to show the colorbar on theplots or not. Defaults to False.
+        cmap (Union[str, np.ndarray, pv.LookupTable], optional): name of matplotlib colormap or custom colormap that maps scalar values to rbp. Defaults to "viridis".
+        portrait (bool, optional): Whether to use the smaller or larger number of plots as rows. Defaults to False.
+        titles (Union[list[dict[str, str]], None], optional): Titles of the different plots if not just the species name is desired. Defaults to None.
+        linked_views (bool, optional): link the view cameras. Defaults to True.
+        plotter_kwargs (dict[str, Any], optional): Additional keyword arguments for the used pyVista.Plotter. Defaults to None.
+        plotfunc_kwargs (dict[str, Any], optional): Additional keyword arguments passed to plotter.add_mesh. Defaults to None.
+
+    Returns:
+        str | Path: path to the saved animation .mp4 file
+    """
+
+
+    def plotfunc(
+        label: str,
+        data: np.ndarray,
+        plotter: pv.Plotter,
+        panel: tuple[int, int],
+        show_cmap: bool,
+        cmap: Union[str, np.ndarray, pv.LookupTable],
+        **kwargs: dict[str, Any],
+    ):
+        # create a pyvista grid
+        plotter.subplot(*panel)
+        plotter.title = label
+        plotter.add_mesh(
+            data,
+            scalars=data,
+            label=label,
+            cmap=cmap,
+            show_scalar_bar=show_cmap,
+            **kwargs,
+        )
+
+    return facet_grid_animate_3D(
+        filename,
+        data=[
+            {
+                species[i]: res.species_concentration[species[i]]
+                for i in range(len(species))
+            }
+            for res in simulation_results
+        ],
+        plotfuncs={species[i]: plotfunc for i in range(len(species))},
+        show_cmap=show_cmap,
+        cmap="viridis",
+        portrait=portrait,
+        linked_views=linked_views,
+        titles=titles,
+        plotter_kwargs=plotter_kwargs,
+        plotfuncs_kwargs=plotfunc_kwargs,
+    )

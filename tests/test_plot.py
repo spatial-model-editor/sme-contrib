@@ -201,3 +201,38 @@ def test_facet_grid_animation(tmp_path, exampledata):
             },
             titles=["title1", "title2"],
         )
+
+
+def test_plot_3D():
+    model_file = _get_abs_path("model.xml")
+    model = sme.open_sbml_file(model_file)
+    results = model.simulate(100, 10)
+
+    # single species
+    plotter = smeplot.concentrations3D(
+        simulation_result=results[10],
+        species=["A_nucl"],
+        cmap="tab10",
+        show_cmap=True,
+    )
+
+    assert plotter.title == "A_nucl"
+    assert plotter is not None
+    assert plotter.shape == (1, 1)
+
+def test_plot_3D_animation(tmp_path):
+    model_file = _get_abs_path("model.xml")
+    model = sme.open_sbml_file(model_file)
+    results = model.simulate(100, 10)
+
+    vidpath = smeplot.concentrationsAnimate3D(
+        filename=tmp_path /"test.mp4",
+        simulation_results=results,
+        species=["A_nucl"],
+        cmap="tab10",
+        show_cmap=True,
+    )
+
+    assert vidpath is not None 
+    assert str(vidpath).endswith(".mp4")
+    assert os.path.exists(vidpath)
