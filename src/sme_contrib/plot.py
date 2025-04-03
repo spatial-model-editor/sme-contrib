@@ -315,8 +315,6 @@ def concentrations3D(
     """
     # turn the simulation result into numpy ndarray
     datadict = {}
-    maximum_species = 0
-    maximum = 0
     for s in species:
         if s not in simulation_result.species_concentration:
             raise ValueError(f"Species {s} not found in simulation result.")
@@ -324,13 +322,7 @@ def concentrations3D(
         if data.ndim != 3:
             raise ValueError("Data must be 3D.")
         else:
-            if np.max(data) > maximum:
-                maximum_species = s
-                maximum = np.max(data)
-        datadict[s] = data
-
-    # create a colormap
-    cmap = make_discrete_colormap(cmap, datadict[maximum_species])
+            datadict[s] = data
 
     # create a plot function
     def plotfunc(
@@ -342,7 +334,6 @@ def concentrations3D(
         cmap: Union[str, np.ndarray, pv.LookupTable],
         **kwargs: dict[str, Any],
     ):
-        print(f"Plotting {label} in panel {panel}")
         # create a pyvista grid
 
         plotter.subplot(*panel)
@@ -395,13 +386,12 @@ def concentrationsAnimate3D(
         portrait (bool, optional): Whether to use the smaller or larger number of plots as rows. Defaults to False.
         titles (Union[list[dict[str, str]], None], optional): Titles of the different plots if not just the species name is desired. Defaults to None.
         linked_views (bool, optional): link the view cameras. Defaults to True.
-        plotter_kwargs (dict[str, Any], optional): Additional keyword arguments for the used pyVista.Plotter. Defaults to None.
-        plotfunc_kwargs (dict[str, Any], optional): Additional keyword arguments passed to plotter.add_mesh. Defaults to None.
+        plotter_kwargs (dict[str, Any], optional): Additional keyword arguments for the used pyVista.Plotter. Defaults to None. See [here](https://docs.pyvista.org/api/plotting/_autosummary/pyvista.plotter) for more information
+        plotfunc_kwargs (dict[str, Any], optional): Additional keyword arguments passed to plotter.add_mesh. Defaults to None. See [here](https://docs.pyvista.org/api/plotting/_autosummary/pyvista.plotter.add_mesh#) for more information.
 
     Returns:
         str | Path: path to the saved animation .mp4 file
     """
-
 
     def plotfunc(
         label: str,
@@ -435,7 +425,7 @@ def concentrationsAnimate3D(
         ],
         plotfuncs={species[i]: plotfunc for i in range(len(species))},
         show_cmap=show_cmap,
-        cmap="viridis",
+        cmap=cmap,
         portrait=portrait,
         linked_views=linked_views,
         titles=titles,

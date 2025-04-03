@@ -109,6 +109,7 @@ def test_facet_grid_3D(exampledata):
             "brain": plot_brain,
         },
     )
+    facetgrid.show()
 
     assert facetgrid.shape == (1, 3)
 
@@ -220,19 +221,20 @@ def test_plot_3D():
     assert plotter is not None
     assert plotter.shape == (1, 1)
 
+
 def test_plot_3D_animation(tmp_path):
     model_file = _get_abs_path("model.xml")
     model = sme.open_sbml_file(model_file)
     results = model.simulate(100, 10)
 
     vidpath = smeplot.concentrationsAnimate3D(
-        filename=tmp_path /"test.mp4",
+        filename=tmp_path / "test.mp4",
         simulation_results=results,
         species=["A_nucl"],
         cmap="tab10",
         show_cmap=True,
     )
 
-    assert vidpath is not None 
+    assert vidpath is not None
     assert str(vidpath).endswith(".mp4")
     assert os.path.exists(vidpath)
