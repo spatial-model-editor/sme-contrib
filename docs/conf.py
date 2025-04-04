@@ -28,6 +28,8 @@ author = "Liam Keegan"
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "pyvista.ext.plot_directive",
+    "pyvista.ext.viewer_directive",
     "nbsphinx",
     "sphinx_rtd_theme",
     "sphinx.ext.autodoc",
