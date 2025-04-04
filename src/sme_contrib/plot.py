@@ -4,14 +4,13 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap as lscmap
 from matplotlib import animation
-import pyvista as pv
+from pyvista import Plotter, LookupTable
 from typing import Any, Callable, Union
 import sme
 from pathlib import Path
 
 from .pyvista_utils import (
     find_layout,
-    make_discrete_colormap,
 )
 
 
@@ -135,12 +134,12 @@ def facet_grid_3D(
     data: dict[str, np.ndarray],
     plotfuncs: dict[str, Callable],
     show_cmap: bool = False,
-    cmap: Union[str, np.ndarray, pv.LookupTable] = "viridis",
+    cmap: Union[str, np.ndarray, LookupTable] = "viridis",
     portrait: bool = False,
     linked_views: bool = True,
     plotter_kwargs: Union[dict, None] = None,
     plotfuncs_kwargs: Union[dict[str, dict[str, Any]], None] = None,
-) -> pv.Plotter:
+) -> Plotter:
     """
     Create a 3D facet plot using PyVista.
 
@@ -148,16 +147,16 @@ def facet_grid_3D(
 
     Args:
         data : (dict[str, np.ndarray]) A dictionary where keys are labels and values are numpy arrays containing the data to be plotted.
-        plotfuncs : (dict[str, Callable]) A dictionary where keys are labels and values are functions with signature ``f(label:str, data:np.ndarray | pyvista.ImageData | pyvista.UniformGrid, plotter:pv.Plotter, panel:tuple[int, int], show_cmap:bool=show_cmap, cmap=cmap, **plotfuncs_kwargs )`` -> None
+        plotfuncs : (dict[str, Callable]) A dictionary where keys are labels and values are functions with signature ``f(label:str, data:np.ndarray | pyvista.ImageData | pyvista.UniformGrid, plotter:Plotter, panel:tuple[int, int], show_cmap:bool=show_cmap, cmap=cmap, **plotfuncs_kwargs )`` -> None
         show_cmap : bool, optional Whether to show the color map. Default is False.
-        cmap : (str | np.ndarray | pv.LookupTable), optional The color map to use. Default is "viridis".
+        cmap : (str | np.ndarray | LookupTable), optional The color map to use. Default is "viridis".
         portrait : (bool), optional Whether to use a portrait layout. Default is False.
         linked_views : (bool), optional Whether to link the views of the subplots. Default is True.
         plotter_kwargs : (dict, optional) Additional keyword arguments to pass to the PyVista Plotter.
         plotfuncs_kwargs : (dict[str, dict[str, Any]]), optional Additional keyword arguments to pass to each plotting function.
 
     Returns:
-        pv.Plotter The PyVista Plotter object with the created facet plot.
+        Plotter The PyVista Plotter object with the created facet plot.
     """
     if data.keys() != plotfuncs.keys():
         raise ValueError(
@@ -166,7 +165,7 @@ def facet_grid_3D(
 
     layout = find_layout(len(data), portrait=portrait)
 
-    plotter = pv.Plotter(
+    plotter = Plotter(
         shape=layout, **(plotter_kwargs if plotter_kwargs is not None else {})
     )
 
@@ -200,7 +199,7 @@ def facet_grid_animate_3D(
     data: list[dict[str, np.ndarray]],
     plotfuncs: dict[str, Callable],
     show_cmap: bool = False,
-    cmap: Union[str, np.ndarray, pv.LookupTable] = "viridis",
+    cmap: Union[str, np.ndarray, LookupTable] = "viridis",
     portrait: bool = False,
     linked_views: bool = True,
     titles: Union[list[dict[str, str]], None] = None,
@@ -217,7 +216,7 @@ def facet_grid_animate_3D(
         data : (list[dict[str, np.ndarray]]) A list of dictionaries containing the data for each timestep.
         plotfuncs : (dict[str, Callable]) A dictionary of plotting functions keyed by data label. The keys for plotfuncs and data must be the same.
         show_cmap : (bool), optional Whether to show the color map (default is False).
-        cmap : (str | np.ndarray | pv.LookupTable, optional) The colormap to use (default is "viridis").
+        cmap : (str | np.ndarray | LookupTable, optional) The colormap to use (default is "viridis").
         portrait : (bool), optional Whether to use portrait layout (default is False).
         linked_views : (bool), optional Whether to link the views of the subplots (default is True).
         titles : (list[dict[str, str]]), optional A list of dictionaries containing titles for each subplot (default is an empty list).
@@ -265,7 +264,7 @@ def facet_grid_animate_3D(
     # preparations
     layout = find_layout(len(plotfuncs), portrait=portrait)
 
-    plotter = pv.Plotter(
+    plotter = Plotter(
         shape=layout, **plotter_kwargs if plotter_kwargs is not None else {}
     )
 
@@ -290,11 +289,11 @@ def facet_grid_animate_3D(
 def concentrations3D(
     simulation_result: sme.SimulationResult,
     species: list[str],
-    cmap: Union[str, np.ndarray, pv.LookupTable] = "viridis",
+    cmap: Union[str, np.ndarray, LookupTable] = "viridis",
     show_cmap: bool = False,
     plotter_kwargs: Union[None, dict[str, Any]] = None,
     plotfunc_kwargs: Union[None, dict[str, Any]] = None,
-) -> pv.Plotter:
+) -> Plotter:
     """Plot a 3D facet grid of species concentrations.
     This function creates a 3D facet grid of species concentrations. Each panel will be a 3D plot of the concentration of a single species.
     This function is a wrapper around the facet_grid_3D function.
@@ -302,7 +301,7 @@ def concentrations3D(
     Args:
         simulation_result (sme.SimulationResult): a single simulation result object, i.e., a single recorded frame of the simulations
         species (list[str]): A list of species strings
-        cmap (str | np.ndarray | pv.LookupTable, optional): Name of a matplotlib colorbar. Defaults to "viridis".
+        cmap (str | np.ndarray | LookupTable, optional): Name of a matplotlib colorbar. Defaults to "viridis".
         show_cmap (bool, optional): Whether or not to show the colorbar on the plot. Defaults to False.
         plotter_kwargs (dict[str, Any], optional): Additional keyword arguments for the used pyVista.Plotter. Defaults to None.
         plotfunc_kwargs (dict[str, Any], optional): Additional keyword arguments passed to plotter.add_mesh. Defaults to None.
@@ -311,7 +310,7 @@ def concentrations3D(
         ValueError: if a given species is not found in the simulation result
 
     Returns:
-        pv.Plotter: pyvista.Plotter object the data has been plotted into
+        Plotter: pyvista.Plotter object the data has been plotted into
     """
     # turn the simulation result into numpy ndarray
     datadict = {}
@@ -328,10 +327,10 @@ def concentrations3D(
     def plotfunc(
         label: str,
         data: np.ndarray,
-        plotter: pv.Plotter,
+        plotter: Plotter,
         panel: tuple[int, int],
         show_cmap: bool,
-        cmap: Union[str, np.ndarray, pv.LookupTable],
+        cmap: Union[str, np.ndarray, LookupTable],
         **kwargs: dict[str, Any],
     ):
         # create a pyvista grid
@@ -369,7 +368,7 @@ def concentrationsAnimate3D(
     simulation_results: sme.SimulationResultList,
     species: list[str],
     show_cmap: bool = False,
-    cmap: Union[str, np.ndarray, pv.LookupTable] = "viridis",
+    cmap: Union[str, np.ndarray, LookupTable] = "viridis",
     portrait: bool = False,
     titles: Union[list[dict[str, str]], None] = None,
     linked_views: bool = True,
@@ -386,7 +385,7 @@ def concentrationsAnimate3D(
         simulation_results (sme.SimulationResultList): a list of `SimulationResult` objects, i.e., a list of recorded frames of the simulations
         species (list[str]): list of species to plot
         show_cmap (bool, optional): Whether to show the colorbar on theplots or not. Defaults to False.
-        cmap (Union[str, np.ndarray, pv.LookupTable], optional): name of matplotlib colormap or custom colormap that maps scalar values to rbp. Defaults to "viridis".
+        cmap (Union[str, np.ndarray, LookupTable], optional): name of matplotlib colormap or custom colormap that maps scalar values to rbp. Defaults to "viridis".
         portrait (bool, optional): Whether to use the smaller or larger number of plots as rows. Defaults to False.
         titles (Union[list[dict[str, str]], None], optional): Titles of the different plots if not just the species name is desired. Defaults to None.
         linked_views (bool, optional): link the view cameras. Defaults to True.
