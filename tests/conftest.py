@@ -1,5 +1,10 @@
 import pytest
+import pyvista
+
+pyvista.Plotter().close()  # initialize pyvista vtk stuff. silly, but necessary when used with sme
 from pyvista import examples
+
+pyvista.OFF_SCREEN = True
 
 
 @pytest.fixture(scope="session")

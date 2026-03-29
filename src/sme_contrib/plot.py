@@ -4,14 +4,18 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap as lscmap
 from matplotlib import animation
-from pyvista import Plotter, LookupTable
 from typing import Any, Callable, Union
-import sme
 from pathlib import Path
 
+from pyvista import Plotter, LookupTable
 from .pyvista_utils import (
     find_layout,
 )
+
+# initialize pyvista vtk stuff
+Plotter(off_screen=True).close()
+
+import sme  # noqa: E402
 
 
 def colormap(color, name="my colormap"):
