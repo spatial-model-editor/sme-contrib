@@ -113,6 +113,28 @@ def test_facet_grid_3D(exampledata):
 
     assert facetgrid.shape == (1, 3)
 
+
+def test_facet_grid_3D_fails(exampledata):
+    def plot_bloodvessel(label, data, plotter, panel, **kwargs):
+        plotter.subplot(*panel)
+        plotter.add_mesh(data)
+
+    def plot_brain(label, data, plotter, panel, **kwargs):
+        plotter.subplot(*panel)
+        plotter.add_volume(
+            data,
+            cmap="viridis",
+            opacity="sigmoid",  # Common opacity mapping for volume rendering
+            shade=True,
+            ambient=0.3,
+            diffuse=0.6,
+            specular=0.5,
+        )
+
+    def plot_armadillo(label, data, plotter, panel, **kwargs):
+        plotter.subplot(*panel)
+        plotter.add_mesh(data)
+
     with pytest.raises(ValueError):
         smeplot.facet_grid_3D(
             data={
