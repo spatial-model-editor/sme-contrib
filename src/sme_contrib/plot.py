@@ -15,7 +15,7 @@ from .pyvista_utils import (
 
 # README: Keep this to avoid VTK loader-order hangs. Horrible hack,
 # but could not find a better solution at them moment.
-if os.environ.get("SME_CONTRIB_SKIP_PYVISTA_PLOTTER_INIT", "0") != "1":
+if os.environ.get("SME_CONTRIB_SKIP_PYVISTA_INIT", "0") != "1":
     Plotter(off_screen=True).close()
 
 import sme  # noqa: E402
