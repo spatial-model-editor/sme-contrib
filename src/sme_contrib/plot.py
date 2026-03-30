@@ -6,14 +6,17 @@ from matplotlib.colors import LinearSegmentedColormap as lscmap
 from matplotlib import animation
 from typing import Any, Callable, Union
 from pathlib import Path
+import os
 
 from pyvista import Plotter, LookupTable
 from .pyvista_utils import (
     find_layout,
 )
 
-# initialize pyvista vtk stuff
-Plotter(off_screen=True).close()
+# README: Keep this to avoid VTK loader-order hangs. Horrible hack,
+# but could not find a better solution at them moment.
+if os.environ.get("SME_CONTRIB_SKIP_PYVISTA_PLOTTER_INIT", "0") != "1":
+    Plotter(off_screen=True).close()
 
 import sme  # noqa: E402
 
