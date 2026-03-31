@@ -12,24 +12,21 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: pyvista/setup-headless-display-action@v3
+      - uses: pyvista/setup-headless-display-action@v4
       - run: pip install -e .[tests]
       - run: python -m pytest --cov=sme_contrib --cov-report=xml -v
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
           name: ${{ matrix.os }}-${{ matrix.python-version }}
           fail_ci_if_error: true
           verbose: true
-      # https://stackoverflow.com/questions/12844451/test-test-coverage-with-python-in-sonar-not-showing-up
-      - run: coverage xml -i
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
