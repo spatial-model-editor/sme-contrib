@@ -261,9 +261,11 @@ def facet_grid_animate_3D(
                     panel=(i, j),
                     show_cmap=show_cmap,
                     cmap=cmap,
-                    **plotfuncs_kwargs.get(current_label, {})
-                    if plotfuncs_kwargs is not None
-                    else {},
+                    **(
+                        plotfuncs_kwargs.get(current_label, {})
+                        if plotfuncs_kwargs is not None
+                        else {}
+                    ),
                 )
 
         plotter.write_frame()
