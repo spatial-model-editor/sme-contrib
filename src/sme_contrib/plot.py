@@ -301,7 +301,7 @@ def concentrations3D(
     cmap: Union[str, np.ndarray, LookupTable] = "viridis",
     show_cmap: bool = False,
     plotter_kwargs: Union[None, dict[str, Any]] = None,
-    plotfunc_kwargs: Union[None, dict[str, Any]] = None,
+    plotfunc_kwargs: Union[None, dict[str, dict[str, Any]]] = None,
 ) -> Plotter:
     """Plot a 3D facet grid of species concentrations.
     This function creates a 3D facet grid of species concentrations. Each panel will be a 3D plot of the concentration of a single species.
@@ -313,7 +313,7 @@ def concentrations3D(
         cmap (str | np.ndarray | LookupTable, optional): Name of a matplotlib colorbar. Defaults to "viridis".
         show_cmap (bool, optional): Whether or not to show the colorbar on the plot. Defaults to False.
         plotter_kwargs (dict[str, Any], optional): Additional keyword arguments for the used pyVista.Plotter. Defaults to None.
-        plotfunc_kwargs (dict[str, Any], optional): Additional keyword arguments passed to plotter.add_mesh. Defaults to None.
+        plotfunc_kwargs (dict[str, dict[str, Any]], optional): Additional keyword arguments passed to each species' plotting call, keyed by species label. Each value is forwarded to `plotter.add_mesh` for that subplot. Defaults to None. Example: `{"A_nucl": {"opacity": 0.5}, "A_cell": {"opacity": 0.2}}`.
     Raises:
         ValueError: if the data is not 3D
         ValueError: if a given species is not found in the simulation result
@@ -382,7 +382,7 @@ def concentrationsAnimate3D(
     titles: Union[list[dict[str, str]], None] = None,
     linked_views: bool = True,
     plotter_kwargs: Union[None, dict[str, Any]] = None,
-    plotfunc_kwargs: Union[None, dict[str, Any]] = None,
+    plotfunc_kwargs: Union[None, dict[str, dict[str, Any]]] = None,
 ) -> Union[str, Path]:
     """Animate a list of frames from a simulation result list.
     This function creates a 3D animation of the species concentrations over time. Each frame will be a 3D plot of the concentration of a single species.
@@ -399,7 +399,7 @@ def concentrationsAnimate3D(
         titles (Union[list[dict[str, str]], None], optional): Titles of the different plots if not just the species name is desired. Defaults to None.
         linked_views (bool, optional): link the view cameras. Defaults to True.
         plotter_kwargs (dict[str, Any], optional): Additional keyword arguments for the used pyVista.Plotter. Defaults to None. See [here](https://docs.pyvista.org/api/plotting/_autosummary/pyvista.plotter) for more information
-        plotfunc_kwargs (dict[str, Any], optional): Additional keyword arguments passed to plotter.add_mesh. Defaults to None. See [here](https://docs.pyvista.org/api/plotting/_autosummary/pyvista.plotter.add_mesh#) for more information.
+        plotfunc_kwargs (dict[str, dict[str, Any]], optional): Additional keyword arguments passed to each species' plotting call, keyed by species label. Each value is forwarded to `plotter.add_mesh` for that subplot. Defaults to None. Example: `{"A_nucl": {"opacity": 0.5}, "A_cell": {"opacity": 0.2}}`. See [here](https://docs.pyvista.org/api/plotting/_autosummary/pyvista.plotter.add_mesh#) for more information.
 
     Returns:
         Union[str, Path]: path to the saved animation .mp4 file
