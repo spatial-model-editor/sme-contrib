@@ -250,6 +250,8 @@ def facet_grid_animate_3D(
     def create_frame(
         data_dict: dict[str, np.ndarray], title: dict[str:str], layout=(1, 1)
     ):
+        plotter.clear_actors()
+
         label = iter(data_dict.keys())
         for i in range(layout[0]):
             for j in range(layout[1]):
