@@ -285,7 +285,7 @@ def facet_grid_animate_3D(
     if linked_views:
         plotter.link_views()
 
-    for i, single_timestep_data in enumerate(data[1::]):
+    for i, single_timestep_data in enumerate(data[1::], start=1):
         create_frame(
             single_timestep_data, titles[i] if len(titles) > 0 else {}, layout=layout
         )
