@@ -180,7 +180,9 @@ def facet_grid_3D(
 
     for i in range(layout[0]):
         for j in range(layout[1]):
-            current_label = next(label)
+            current_label = next(label, None)
+            if current_label is None:
+                break
             plotfuncs[current_label](
                 current_label,
                 data[current_label],
@@ -194,6 +196,8 @@ def facet_grid_3D(
                     else {}
                 ),
             )
+        if current_label is None:
+            break
 
     if linked_views:
         plotter.link_views()
@@ -255,7 +259,9 @@ def facet_grid_animate_3D(
         label = iter(data_dict.keys())
         for i in range(layout[0]):
             for j in range(layout[1]):
-                current_label = next(label)
+                current_label = next(label, None)
+                if current_label is None:
+                    break
                 plotfuncs[current_label](
                     title.get(current_label, current_label),
                     data_dict[current_label],
@@ -269,6 +275,8 @@ def facet_grid_animate_3D(
                         else {}
                     ),
                 )
+            if current_label is None:
+                break
 
         plotter.write_frame()
 
