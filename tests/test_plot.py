@@ -97,7 +97,7 @@ def test_facet_grid_3D(exampledata):
         plotter.subplot(*panel)
         plotter.add_mesh(data)
 
-    facetgrid = smeplot.facet_grid_3D(
+    facetgrid = smeplot.facet_grid3D(
         data={
             "armadillo": exampledata["armadillo"],
             "bloodvessel": exampledata["bloodvessel"],
@@ -136,7 +136,7 @@ def test_facet_grid_3D_fails(exampledata):
         plotter.add_mesh(data)
 
     with pytest.raises(ValueError):
-        smeplot.facet_grid_3D(
+        smeplot.facet_grid3D(
             data={
                 "armadillo": exampledata["armadillo"],
                 "bloodvessel": exampledata["bloodvessel"],
@@ -189,7 +189,7 @@ def test_facet_grid_animation(tmp_path, exampledata):
         },
     ]
 
-    testanimation = smeplot.facet_grid_animate_3D(
+    testanimation = smeplot.facet_grid_animation3D(
         tmp_path / "test.mp4",
         data=data_for_frames,
         plotfuncs={
@@ -203,7 +203,7 @@ def test_facet_grid_animation(tmp_path, exampledata):
     assert testanimation.exists()
 
     with pytest.raises(ValueError):
-        smeplot.facet_grid_animate_3D(
+        smeplot.facet_grid_animation3D(
             tmp_path / "test.mp4",
             data=data_for_frames,
             plotfuncs={
@@ -214,7 +214,7 @@ def test_facet_grid_animation(tmp_path, exampledata):
         )
 
     with pytest.raises(ValueError):
-        smeplot.facet_grid_animate_3D(
+        smeplot.facet_grid_animation3D(
             tmp_path / "test.mp4",
             data=data_for_frames,
             plotfuncs={
@@ -232,7 +232,7 @@ def test_plot_3D():
     results = model.simulate(100, 10)
 
     # single species
-    plotter = smeplot.concentrations3D(
+    plotter = smeplot.concentration_heatmap3D(
         simulation_result=results[10],
         species=["A_nucl"],
         cmap="tab10",
@@ -249,7 +249,7 @@ def test_plot_3D_animation(tmp_path):
     model = sme.open_sbml_file(model_file)
     results = model.simulate(100, 10)
 
-    vidpath = smeplot.concentrationsAnimate3D(
+    vidpath = smeplot.concentration_heatmap_animation3D(
         filename=tmp_path / "test.mp4",
         simulation_results=results,
         species=["A_nucl"],
