@@ -14,6 +14,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath("../"))
+os.environ["SME_CONTRIB_SKIP_PYVISTA_INIT"] = "1"
 
 # -- Project information -----------------------------------------------------
 
@@ -28,6 +29,8 @@ author = "Liam Keegan"
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "pyvista.ext.plot_directive",
+    "pyvista.ext.viewer_directive",
     "nbsphinx",
     "sphinx_rtd_theme",
     "sphinx.ext.autodoc",

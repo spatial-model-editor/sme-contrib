@@ -1,6 +1,7 @@
 import sme_contrib.plot as smeplot
 import sme
 import os.path
+import pytest
 
 
 def _get_abs_path(filename):
@@ -73,3 +74,189 @@ def test_concentration_heatmap_animation() -> None:
             frame[1].get_text()
             == f"Concentration of A_nucl, A_cell: t = {result.time_point}"
         )
+
+
+def test_facet_grid_3D(exampledata):
+    def plot_bloodvessel(label, data, plotter, panel, **kwargs):
+        plotter.subplot(*panel)
+        plotter.add_mesh(data)
+
+    def plot_brain(label, data, plotter, panel, **kwargs):
+        plotter.subplot(*panel)
+        plotter.add_volume(
+            data,
+            cmap="viridis",
+            opacity="sigmoid",  # Common opacity mapping for volume rendering
+            shade=True,
+            ambient=0.3,
+            diffuse=0.6,
+            specular=0.5,
+        )
+
+    def plot_armadillo(label, data, plotter, panel, **kwargs):
+        plotter.subplot(*panel)
+        plotter.add_mesh(data)
+
+    facetgrid = smeplot.facet_grid3D(
+        data={
+            "armadillo": exampledata["armadillo"],
+            "bloodvessel": exampledata["bloodvessel"],
+            "brain": exampledata["brain"],
+        },
+        plotfuncs={
+            "armadillo": plot_armadillo,
+            "bloodvessel": plot_bloodvessel,
+            "brain": plot_brain,
+        },
+    )
+    facetgrid.show()
+
+    assert facetgrid.shape == (1, 3)
+
+
+def test_facet_grid_3D_fails(exampledata):
+    def plot_bloodvessel(label, data, plotter, panel, **kwargs):
+        plotter.subplot(*panel)
+        plotter.add_mesh(data)
+
+    def plot_brain(label, data, plotter, panel, **kwargs):
+        plotter.subplot(*panel)
+        plotter.add_volume(
+            data,
+            cmap="viridis",
+            opacity="sigmoid",  # Common opacity mapping for volume rendering
+            shade=True,
+            ambient=0.3,
+            diffuse=0.6,
+            specular=0.5,
+        )
+
+    def plot_armadillo(label, data, plotter, panel, **kwargs):
+        plotter.subplot(*panel)
+        plotter.add_mesh(data)
+
+    with pytest.raises(ValueError):
+        smeplot.facet_grid3D(
+            data={
+                "armadillo": exampledata["armadillo"],
+                "bloodvessel": exampledata["bloodvessel"],
+                "brain": exampledata["brain"],
+            },
+            plotfuncs={
+                "armadillo": plot_armadillo,
+                "bloodvessel": plot_bloodvessel,
+                "wrong_key": plot_brain,
+            },
+        )
+
+
+def test_facet_grid_animation(tmp_path, exampledata):
+    def plot_bloodvessel(label, data, plotter, panel, **kwargs):
+        plotter.subplot(*panel)
+        plotter.add_mesh(data)
+
+    def plot_brain(label, data, plotter, panel, **kwargs):
+        plotter.subplot(*panel)
+        plotter.add_volume(
+            data,
+            cmap="viridis",
+            opacity="sigmoid",  # Common opacity mapping for volume rendering
+            shade=True,
+            ambient=0.3,
+            diffuse=0.6,
+            specular=0.5,
+        )
+
+    def plot_armadillo(label, data, plotter, panel, **kwargs):
+        plotter.subplot(*panel)
+        plotter.add_mesh(data)
+
+    data_for_frames = [
+        {
+            "armadillo": exampledata["armadillo"],
+            "bloodvessel": exampledata["bloodvessel"],
+            "brain": exampledata["brain"],
+        },
+        {
+            "armadillo": exampledata["armadillo"],
+            "bloodvessel": exampledata["bloodvessel"],
+            "brain": exampledata["brain"],
+        },
+        {
+            "armadillo": exampledata["armadillo"],
+            "bloodvessel": exampledata["bloodvessel"],
+            "brain": exampledata["brain"],
+        },
+    ]
+
+    testanimation = smeplot.facet_grid_animation3D(
+        tmp_path / "test.mp4",
+        data=data_for_frames,
+        plotfuncs={
+            "armadillo": plot_armadillo,
+            "bloodvessel": plot_bloodvessel,
+            "brain": plot_brain,
+        },
+    )
+
+    assert testanimation == tmp_path / "test.mp4"
+    assert testanimation.exists()
+
+    with pytest.raises(ValueError):
+        smeplot.facet_grid_animation3D(
+            tmp_path / "test.mp4",
+            data=data_for_frames,
+            plotfuncs={
+                "armadillo": plot_armadillo,
+                "bloodvessel": plot_bloodvessel,
+                "wrong_key": plot_brain,
+            },
+        )
+
+    with pytest.raises(ValueError):
+        smeplot.facet_grid_animation3D(
+            tmp_path / "test.mp4",
+            data=data_for_frames,
+            plotfuncs={
+                "armadillo": plot_armadillo,
+                "bloodvessel": plot_bloodvessel,
+                "brain": plot_brain,
+            },
+            titles=["title1", "title2"],
+        )
+
+
+def test_plot_3D():
+    model_file = _get_abs_path("model.xml")
+    model = sme.open_sbml_file(model_file)
+    results = model.simulate(100, 10)
+
+    # single species
+    plotter = smeplot.concentration_heatmap3D(
+        simulation_result=results[10],
+        species=["A_nucl"],
+        cmap="tab10",
+        show_cmap=True,
+    )
+
+    assert plotter.title == "A_nucl"
+    assert plotter is not None
+    assert plotter.shape == (1, 1)
+
+
+def test_plot_3D_animation(tmp_path):
+    model_file = _get_abs_path("model.xml")
+    model = sme.open_sbml_file(model_file)
+    results = model.simulate(100, 10)
+
+    vidpath = smeplot.concentration_heatmap_animation3D(
+        filename=tmp_path / "test.mp4",
+        simulation_results=results,
+        species=["A_nucl"],
+        cmap="tab10",
+        show_cmap=True,
+    )
+
+    assert vidpath is not None
+    assert str(vidpath).endswith(".mp4")
+    assert os.path.exists(vidpath)
