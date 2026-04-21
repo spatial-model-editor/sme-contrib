@@ -19,15 +19,15 @@ def test_rgb_to_scalar():
     )
 
 
-def test_make_discrete_colormap():
-    lt = pyvista_utils.make_discrete_colormap()
+def test_colormap_3D():
+    lt = pyvista_utils.colormap_3D()
     cm = plt.get_cmap("tab10").colors
     should = (np.array([mcolors.to_rgba(cm[0])]) * 255).astype(np.int32)
     assert lt.n_values == 1
     assert lt.scalar_range == (0, 1)
     assert np.all(lt.values == should)
 
-    lt = pyvista_utils.make_discrete_colormap("tab20", np.array([0, 1, 2, 3]))
+    lt = pyvista_utils.colormap_3D("tab20", np.array([0, 1, 2, 3]))
     assert lt.n_values == 4
     assert lt.scalar_range == (0, 4)
     cm = plt.get_cmap("tab20").colors

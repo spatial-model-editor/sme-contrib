@@ -2,6 +2,7 @@ import numpy as np
 from itertools import cycle
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
+from pyvista import LookupTable
 
 
 def rgb_to_scalar(img: np.ndarray) -> np.ndarray:
@@ -21,7 +22,7 @@ def rgb_to_scalar(img: np.ndarray) -> np.ndarray:
     return values[ridx].reshape(img.shape[:-1])
 
 
-def make_discrete_colormap(cmap: str = "tab10", values: np.ndarray = np.array([])):
+def colormap_3D(cmap: str = "tab10", values: np.ndarray = np.array([])):
     """
     Create a discrete colormap for use with PyVista with as many colors as unique values in the ``values``array based on a given matplotlbit colormap. The colors will possibly repeat if there are more unique values than colors in the colormap. In this case, the outcome is intended, e.g., for separability of regions in the visualization,
 
@@ -32,11 +33,6 @@ def make_discrete_colormap(cmap: str = "tab10", values: np.ndarray = np.array([]
     Returns:
     pv.LookupTable: A PyVista LookupTable object with the values drawn from the specified colormap in RGBA format.
     """
-    if "LookupTable" not in globals():
-        from pyvista import (
-            LookupTable,
-        )  # TOD: guard this import to avoid circular imports
-
     cm = []
 
     if values.size == 0:
