@@ -137,7 +137,7 @@ def concentration_heatmap_animation(
     return anim
 
 
-def facet_grid_3D(
+def facet_grid3D(
     data: dict[str, np.ndarray],
     plotfuncs: dict[str, Callable],
     show_cmap: bool = False,
@@ -205,7 +205,7 @@ def facet_grid_3D(
     return plotter
 
 
-def facet_grid_animate_3D(
+def facet_grid_animation3D(
     filename: Union[str, Path],
     data: list[dict[str, np.ndarray]],
     plotfuncs: dict[str, Callable],
@@ -252,7 +252,7 @@ def facet_grid_animate_3D(
 
     # main function, called for each frame in the movie
     def create_frame(
-        data_dict: dict[str, np.ndarray], title: dict[str:str], layout=(1, 1)
+        data_dict: dict[str, np.ndarray], title: dict[str, str], layout=(1, 1)
     ):
         plotter.clear_actors()
 
@@ -305,7 +305,7 @@ def facet_grid_animate_3D(
     return filename
 
 
-def concentrations3D(
+def concentration_heatmap3D(
     simulation_result: sme.SimulationResult,
     species: list[str],
     cmap: Union[str, np.ndarray, LookupTable] = "viridis",
@@ -370,7 +370,7 @@ def concentrations3D(
         )
 
     # use facetGrid3D to plot it
-    return facet_grid_3D(
+    return facet_grid3D(
         data=datadict,
         plotfuncs={species[i]: plotfunc for i in range(len(species))},
         show_cmap=show_cmap,
@@ -382,7 +382,7 @@ def concentrations3D(
     )
 
 
-def concentrationsAnimate3D(
+def concentration_heatmap_animation3D(
     filename: Union[str, Path],
     simulation_results: sme.SimulationResultList,
     species: list[str],
@@ -396,7 +396,7 @@ def concentrationsAnimate3D(
 ) -> Union[str, Path]:
     """Animate a list of frames from a simulation result list.
     This function creates a 3D animation of the species concentrations over time. Each frame will be a 3D plot of the concentration of a single species.
-    This function is a wrapper around the facet_grid_animate_3D function.
+    This function is a wrapper around the facet_grid_animation3D function.
     The animation will be saved to the specified filename.
 
     Args:
@@ -436,7 +436,7 @@ def concentrationsAnimate3D(
             **kwargs,
         )
 
-    return facet_grid_animate_3D(
+    return facet_grid_animation3D(
         filename,
         data=[
             {
