@@ -247,6 +247,8 @@ class SteadyState:
     that is as close as possible to the target image.
 
     Note: This functionality assumes the model is 2d, i.e. it only takes into account the first z-slice of a 3d model
+    and uses SME's Pixel simulator, since the steady-state objective relies on
+    ``species_dcdt``.
 
     Args:
         modelfile(str): The sbml file containing the model
@@ -314,6 +316,12 @@ class SteadyState:
         self.upper_bounds = upper_bounds
         self.timeout_seconds = timeout_seconds
 
+    @staticmethod
+    def _set_pixel_simulator(model):
+        settings = model.simulation_settings
+        settings.simulator_type = sme.SimulatorType.Pixel
+        model.simulation_settings = settings
+
     def _get_conc(self, result):
         # return z=0 slice of concentrations
         c = np.zeros(result.species_concentration[self.species[0]].shape[1:])
@@ -336,6 +344,7 @@ class SteadyState:
 
     def _obj_func(self, params, verbose=False):
         m = sme.open_sbml_file(self.filename)
+        self._set_pixel_simulator(m)
         self.apply_params(m, params)
         obj_sum = 0
         model_concs = []
@@ -488,6 +497,7 @@ class SteadyState:
             matplotlib.axes._subplots.AxesSubplot: The axes the plot was drawn on
         """
         m = sme.open_sbml_file(self.filename)
+        self._set_pixel_simulator(m)
         self.apply_params(m, self.params)
         for geom_img_file in self.geom_img_files:
             if geom_img_file:
@@ -531,5 +541,6 @@ class SteadyState:
             sme.Model: The model with the best parameters applied
         """
         m = sme.open_sbml_file(self.filename)
+        self._set_pixel_simulator(m)
         self.apply_params(m, self.params)
         return m
