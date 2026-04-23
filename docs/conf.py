@@ -14,7 +14,6 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath("../"))
-os.environ["SME_CONTRIB_SKIP_PYVISTA_INIT"] = "1"
 
 # -- Project information -----------------------------------------------------
 
