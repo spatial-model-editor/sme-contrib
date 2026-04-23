@@ -108,6 +108,7 @@ def test_facet_grid_3D(exampledata):
             "bloodvessel": plot_bloodvessel,
             "brain": plot_brain,
         },
+        plotter_kwargs={"off_screen": True},
     )
     facetgrid.show()
 
@@ -197,6 +198,7 @@ def test_facet_grid_animation(tmp_path, exampledata):
             "bloodvessel": plot_bloodvessel,
             "brain": plot_brain,
         },
+        plotter_kwargs={"off_screen": True},
     )
 
     assert testanimation == tmp_path / "test.mp4"
@@ -237,6 +239,7 @@ def test_plot_3D():
         species=["A_nucl"],
         cmap="tab10",
         show_cmap=True,
+        plotter_kwargs={"off_screen": True},
     )
 
     assert plotter.title == "A_nucl"
@@ -255,6 +258,7 @@ def test_plot_3D_animation(tmp_path):
         species=["A_nucl"],
         cmap="tab10",
         show_cmap=True,
+        plotter_kwargs={"off_screen": True},
     )
 
     assert vidpath is not None

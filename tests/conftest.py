@@ -1,10 +1,11 @@
 import pytest
 import pyvista
 
-pyvista.Plotter().close()  # initialize pyvista vtk stuff. silly, but necessary when used with sme
-from pyvista import examples
-
 pyvista.OFF_SCREEN = True
+
+# Initialize PyVista/VTK after headless mode is enabled.
+pyvista.Plotter(off_screen=True).close()
+from pyvista import examples
 
 
 @pytest.fixture(scope="session")
