@@ -9,8 +9,8 @@ repos:
       - id: mixed-line-ending
       - id: check-toml
 
-  - repo: https://github.com/psf/black
-    rev: 26.3.1
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 26.5.1
     hooks:
       - id: black
       - id: black-jupyter
@@ -29,7 +29,7 @@ repos:
           - "prettier-plugin-toml"
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.37.1
+    rev: 0.38.0
     hooks:
       - id: check-github-workflows
       - id: check-readthedocs
